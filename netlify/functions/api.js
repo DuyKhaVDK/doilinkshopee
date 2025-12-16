@@ -149,6 +149,17 @@ async function getShopeeShortLink(originalUrl, subIds = []) {
 
 // --- ROUTER XỬ LÝ CHÍNH ---
 router.post('/convert-text', async (req, res) => {
+    // --- BẢO MẬT THÊM: Kiểm tra xem request có đến từ web của mình không ---
+    // Lấy địa chỉ trang web đang gọi API
+    const referer = req.get('Referer') || req.get('Origin');
+    
+    // Nếu có referer và nó KHÔNG chứa tên miền của bạn -> Từ chối
+    // (Lưu ý: Thay 'ten-trang-web-cua-ban' bằng tên thật trên Netlify)
+    if (referer && !referer.includes('ten-trang-web-cua-ban') && !referer.includes('localhost')) {
+        return res.status(403).json({ error: 'Truy cập bị từ chối.' });
+    }
+    // -----------------------------------------------------------------------
+
     const { text, subIds } = req.body;
 
     if (!text) return res.status(400).json({ error: 'Empty text' });
@@ -203,7 +214,25 @@ router.post('/convert-text', async (req, res) => {
 });
 
 // --- KẾT NỐI VỚI NETLIFY FUNCTIONS ---
-app.use(cors());
+// Chỉ cho phép trang web của bạn (và localhost để test) được gọi
+const allowedOrigins = [
+  'https://chuyendoitool.netlify.app', // <-- Thay bằng link Netlify thật của bạn sau khi deploy
+  'http://localhost:3000', // Giữ cái này để test ở máy tính
+  'http://127.0.0.1:5500'  // Giữ nếu bạn dùng Live Server của VS Code
+];
+
+app.use(cors({
+  origin: function (origin, callback) {
+    // Cho phép request không có origin (như khi test bằng Postman hoặc curl server-to-server)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.indexOf(origin) === -1) {
+      // Nếu origin không nằm trong danh sách cho phép -> Chặn
+      return callback(new Error('Hệ thống từ chối truy cập từ nguồn này.'), false);
+    }
+    return callback(null, true);
+  }
+}));
 app.use(bodyParser.json());
 
 // Đường dẫn này phải khớp với cấu hình trong netlify.toml
