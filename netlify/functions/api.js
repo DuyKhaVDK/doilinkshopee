@@ -23,9 +23,13 @@ async function resolveAndCleanUrl(inputUrl) {
     if (inputUrl.includes('s.shopee.vn') || inputUrl.includes('shp.ee') || inputUrl.includes('vn.shp.ee')) {
         try {
             console.log(`>> Dang giai ma link: ${inputUrl}`);
+            // THÊM: User-Agent để giả lập trình duyệt, tránh bị chặn trả về link login
             const response = await axios.get(inputUrl, {
                 maxRedirects: 5,
-                validateStatus: null 
+                validateStatus: null,
+                headers: {
+                    'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 14_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0 Mobile/15E148 Safari/604.1'
+                }
             });
             finalUrl = response.request.res.responseUrl || inputUrl;
             console.log(`>> Link goc tim duoc: ${finalUrl}`);
@@ -38,15 +42,17 @@ async function resolveAndCleanUrl(inputUrl) {
     let baseUrl = finalUrl.split('?')[0]; 
     
     // --- CASE A: LOGIC CHO LINK SEARCH (WHITELIST) ---
-    // Giữ lại các tham số quan trọng: evcode, signature, promotionId, mmp_pid...
+    // SỬA: Đổi thứ tự ưu tiên để khớp với mong muốn của bạn
+    // Thứ tự mới: mmp_pid -> promotionId -> signature -> các cái khác
     if (baseUrl.includes('/search')) {
         try {
             const urlObj = new URL(finalUrl);
             const originalParams = urlObj.searchParams;
             const newParams = new URLSearchParams();
 
-            // Danh sách tham số được phép giữ lại
-            const allowedKeys = ['keyword', 'shop', 'evcode', 'signature', 'promotionId', 'mmp_pid'];
+            // SỬA: Danh sách tham số được phép giữ lại (Đã sắp xếp lại thứ tự)
+            // Lưu ý: Code sẽ duyệt qua mảng này, gặp cái nào lấy cái đó => Thứ tự trong mảng quyết định thứ tự trong link kết quả
+            const allowedKeys = ['mmp_pid', 'promotionId', 'signature', 'keyword', 'shop', 'evcode'];
 
             allowedKeys.forEach(key => {
                 if (originalParams.has(key)) {
