@@ -1,7 +1,7 @@
 // functions/api.js
 
 const express = require('express');
-const serverless = require('serverless-http'); // Thư viện cầu nối Netlify
+const serverless = require('serverless-http');
 const axios = require('axios');
 const crypto = require('crypto');
 const cors = require('cors');
@@ -10,48 +10,72 @@ const bodyParser = require('body-parser');
 const app = express();
 const router = express.Router();
 
-// --- CẤU HÌNH (BẠN ĐIỀN THÔNG TIN VÀO ĐÂY) ---
 const APP_ID = process.env.APP_ID;     
 const APP_SECRET = process.env.APP_SECRET;
 const SHOPEE_API_URL = 'https://open-api.affiliate.shopee.vn/graphql';
 
-// --- HÀM 1: GIẢI MÃ & LÀM SẠCH LINK (LOGIC PRO) ---
+// --- HÀM HỖ TRỢ: GIẢI MÃ LINK RÚT GỌN (CHUYÊN SÂU) ---
+async function unshortenLink(url) {
+    try {
+        const response = await axios.get(url, {
+            maxRedirects: 0, // QUAN TRỌNG: Không tự động chuyển hướng
+            validateStatus: (status) => status >= 200 && status < 400, // Chấp nhận 301, 302
+            headers: {
+                // Giả lập trình duyệt thật để Shopee không chặn
+                'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 16_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.6 Mobile/15E148 Safari/604.1',
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+                'Accept-Language': 'vi-VN,vi;q=0.9,en-US;q=0.8,en;q=0.7'
+            },
+            timeout: 5000 
+        });
+
+        // Nếu server trả về header Location (link đích), lấy nó ngay
+        if (response.headers.location) {
+            let nextUrl = response.headers.location;
+            // Nếu location là đường dẫn tương đối (bắt đầu bằng /), ghép domain vào
+            if (nextUrl.startsWith('/')) {
+                const urlObj = new URL(url);
+                nextUrl = `${urlObj.origin}${nextUrl}`;
+            }
+            return nextUrl;
+        }
+        
+        // Nếu không có Location, trả về URL gốc
+        return url;
+    } catch (error) {
+        // Lỗi kết nối thì giữ nguyên link
+        return url;
+    }
+}
+
+// --- HÀM 1: XỬ LÝ CHÍNH ---
 async function resolveAndCleanUrl(inputUrl) {
     let finalUrl = inputUrl;
 
-    // 1. FOLLOW REDIRECT (Giải mã link rút gọn)
+    // 1. GIẢI MÃ LINK (Thử tối đa 2 lần redirect nếu cần)
     if (inputUrl.includes('s.shopee.vn') || inputUrl.includes('shp.ee') || inputUrl.includes('vn.shp.ee')) {
-        try {
-            console.log(`>> Dang giai ma link: ${inputUrl}`);
-            // THÊM: User-Agent để giả lập trình duyệt, tránh bị chặn trả về link login
-            const response = await axios.get(inputUrl, {
-                maxRedirects: 5,
-                validateStatus: null,
-                headers: {
-                    'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 14_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0 Mobile/15E148 Safari/604.1'
-                }
-            });
-            finalUrl = response.request.res.responseUrl || inputUrl;
-            console.log(`>> Link goc tim duoc: ${finalUrl}`);
-        } catch (error) {
-            console.log(`>> Khong the giai ma link: ${inputUrl}, giu nguyen.`);
+        console.log(`>> Dang giai ma: ${inputUrl}`);
+        finalUrl = await unshortenLink(finalUrl);
+        
+        // Đề phòng trường hợp redirect 2 lớp (s.shopee -> shp.ee -> shopee.vn)
+        if (finalUrl.includes('shp.ee') || finalUrl.includes('s.shopee.vn')) {
+            finalUrl = await unshortenLink(finalUrl);
         }
+        console.log(`>> Link da giai ma: ${finalUrl}`);
     }
 
-    // 2. XỬ LÝ LÀM SẠCH THEO YÊU CẦU
+    // 2. LÀM SẠCH VÀ SẮP XẾP THAM SỐ
     let baseUrl = finalUrl.split('?')[0]; 
     
-    // --- CASE A: LOGIC CHO LINK SEARCH (WHITELIST) ---
-    // SỬA: Đổi thứ tự ưu tiên để khớp với mong muốn của bạn
-    // Thứ tự mới: mmp_pid -> promotionId -> signature -> các cái khác
+    // --- CASE A: LINK SEARCH (QUAN TRỌNG: SẮP XẾP ĐÚNG THỨ TỰ BẠN CẦN) ---
+    // Thứ tự mong muốn: mmp_pid -> promotionId -> signature -> keyword...
     if (baseUrl.includes('/search')) {
         try {
             const urlObj = new URL(finalUrl);
             const originalParams = urlObj.searchParams;
             const newParams = new URLSearchParams();
 
-            // SỬA: Danh sách tham số được phép giữ lại (Đã sắp xếp lại thứ tự)
-            // Lưu ý: Code sẽ duyệt qua mảng này, gặp cái nào lấy cái đó => Thứ tự trong mảng quyết định thứ tự trong link kết quả
+            // Mảng quyết định thứ tự xuất hiện trong link kết quả
             const allowedKeys = ['mmp_pid', 'promotionId', 'signature', 'keyword', 'shop', 'evcode'];
 
             allowedKeys.forEach(key => {
@@ -60,9 +84,7 @@ async function resolveAndCleanUrl(inputUrl) {
                 }
             });
 
-            // Nếu không còn tham số nào quan trọng thì trả về link gốc trơn
             if (newParams.toString() === "") return baseUrl;
-
             return `${baseUrl}?${newParams.toString()}`;
 
         } catch (e) {
@@ -70,46 +92,37 @@ async function resolveAndCleanUrl(inputUrl) {
         }
     }
 
-    // --- CASE B: LOGIC CHUYỂN ĐỔI SHOP -> PRODUCT ---
-    // Ví dụ: shopee.vn/opaanlp/267075185/9253405547 -> /product/shopid/itemid
+    // --- CASE B: SHOP -> PRODUCT ---
     const shopProductPattern = /shopee\.vn\/([^\/]+)\/(\d+)\/(\d+)/;
     const match = baseUrl.match(shopProductPattern);
-
     if (match) {
-        // match[2] = shopid, match[3] = itemid
         return `https://shopee.vn/product/${match[2]}/${match[3]}`;
     }
 
-    // --- CASE C: CẮT GỌN CHO CÁC LINK KHÁC ---
-    // Gặp /m/ hoặc /product/ hoặc Link Shop -> Cắt hết params
+    // --- CASE C: DỌN RÁC ---
     if (baseUrl.includes('/m/') || baseUrl.includes('/product/') || (baseUrl.split('/').length === 4)) {
         return baseUrl; 
     }
 
-    // 3. LOGIC FALLBACK (Dành cho các link lạ)
     if (finalUrl.includes('uls_trackid=')) finalUrl = finalUrl.split('uls_trackid=')[0];
     if (finalUrl.includes('utm_source=')) finalUrl = finalUrl.split('utm_source=')[0];
     
-    // Nếu không phải link search (đã xử lý ở trên) thì cắt mmp_pid để tránh trùng
+    // Nếu KHÔNG phải link search thì xóa mmp_pid cho đỡ rối
     if (!finalUrl.includes('/search') && finalUrl.includes('mmp_pid=')) {
         finalUrl = finalUrl.split('mmp_pid=')[0];
     }
     
-    if (finalUrl.endsWith('?') || finalUrl.endsWith('&')) {
-        finalUrl = finalUrl.slice(0, -1);
-    }
+    if (finalUrl.endsWith('?') || finalUrl.endsWith('&')) finalUrl = finalUrl.slice(0, -1);
 
     return finalUrl;
 }
 
-// --- HÀM 2: GỌI API SHOPEE TẠO LINK AFFILIATE ---
+// --- HÀM 2: GỌI API SHOPEE ---
 async function getShopeeShortLink(originalUrl, subIds = []) {
     const timestamp = Math.floor(Date.now() / 1000);
     
-    // --- XỬ LÝ SUB_IDS ---
     let subIdsParam = "";
     if (subIds && subIds.length > 0) {
-        // Lọc bỏ chuỗi rỗng và format thành chuỗi ["id1", "id2"]
         const validIds = subIds.filter(id => id && id.trim() !== "");
         if (validIds.length > 0) {
             const formattedIds = validIds.map(id => `"${id.trim()}"`).join(",");
@@ -117,7 +130,6 @@ async function getShopeeShortLink(originalUrl, subIds = []) {
         }
     }
 
-    // Payload GraphQL
     const query = `mutation {
         generateShortLink(input: { 
             originUrl: "${originalUrl}"
@@ -127,7 +139,6 @@ async function getShopeeShortLink(originalUrl, subIds = []) {
         }
     }`;
     
-    // Chuẩn bị Signature
     const payloadObject = { query };
     const payloadString = JSON.stringify(payloadObject);
     const stringToSign = `${APP_ID}${timestamp}${payloadString}${APP_SECRET}`;
@@ -141,27 +152,20 @@ async function getShopeeShortLink(originalUrl, subIds = []) {
             }
         });
 
-        if (response.data.errors) {
-            console.error('>> SHOPEE REFUSED:', JSON.stringify(response.data.errors, null, 2));
-            return null;
-        }
+        if (response.data.errors) return null;
         return response.data.data.generateShortLink.shortLink;
 
     } catch (e) {
-        console.error('>> API ERROR:', e.message);
         return null; 
     }
 }
 
-// --- ROUTER XỬ LÝ CHÍNH ---
+// --- ROUTER ---
 router.post('/convert-text', async (req, res) => {
     const { text, subIds } = req.body;
-
     if (!text) return res.status(400).json({ error: 'Empty text' });
 
-    // Regex tìm link (bao gồm cả s.shopee.vn)
     const urlRegex = /(https?:\/\/(?:www\.)?(?:shopee\.vn|vn\.shp\.ee|shp\.ee|s\.shopee\.vn)[^\s]*)/gi;
-    
     const foundLinks = text.match(urlRegex) || [];
     const uniqueLinks = [...new Set(foundLinks)];
 
@@ -169,28 +173,20 @@ router.post('/convert-text', async (req, res) => {
         return res.json({ success: true, newText: text, message: 'No links found', converted: 0 });
     }
 
-    // Xử lý song song từng link
     const conversions = await Promise.all(uniqueLinks.map(async (url) => {
-        // 1. Làm sạch input (bỏ dấu câu dính ở cuối)
         let cleanInput = url.replace(/[.,;!?)]+$/, ""); 
-        
-        // 2. Giải mã & Làm sạch link
         const realProductUrl = await resolveAndCleanUrl(cleanInput);
-
-        // 3. Tạo link Affiliate (kèm SubID)
         const myShortLink = await getShopeeShortLink(realProductUrl, subIds);
 
         return { 
             original: url, 
-            resolved: realProductUrl, // Link sạch dùng để debug
+            resolved: realProductUrl, 
             short: myShortLink 
         };
     }));
 
-    // Thay thế link trong văn bản gốc
     let newText = text;
     let successCount = 0;
-
     conversions.forEach(item => {
         if (item.short) {
             newText = newText.split(item.original).join(item.short);
@@ -198,21 +194,11 @@ router.post('/convert-text', async (req, res) => {
         }
     });
 
-    // Trả kết quả về Frontend
-    res.json({ 
-        success: true, 
-        newText, 
-        totalLinks: uniqueLinks.length, 
-        converted: successCount,
-        details: conversions 
-    });
+    res.json({ success: true, newText, totalLinks: uniqueLinks.length, converted: successCount, details: conversions });
 });
 
-// --- KẾT NỐI VỚI NETLIFY FUNCTIONS ---
 app.use(cors());
 app.use(bodyParser.json());
-
-// Đường dẫn này phải khớp với cấu hình trong netlify.toml
 app.use('/api', router); 
 
 module.exports.handler = serverless(app);
