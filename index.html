@@ -71,12 +71,12 @@
 </head>
 <body>
 
-    <h2>Shopee Converter Pro</h2>
+    <h2>Chuyển đổi link Shopee</h2>
 
     <div class="main-container">
         <div class="box">
             <div class="header-box">
-                <span class="header-title">Đầu vào</span>
+                <span class="header-title">Nhập link</span>
                 <div class="action-group">
                     <button class="icon-btn btn-paste" onclick="pasteClipboard()">📋 Dán</button>
                     <button class="icon-btn btn-clear" onclick="clearInput()">✕ Xóa</button>
@@ -90,12 +90,12 @@
                 <span class="header-title">Kết quả</span>
                 <button class="icon-btn btn-copy" onclick="copyResult()">Sao chép</button>
             </div>
-            <textarea id="outputText" readonly placeholder="Link Affiliate sẽ hiện ở đây..."></textarea>
+            <textarea id="outputText" readonly placeholder="Link sau chuyển đổi sẽ hiện ở đây..."></textarea>
         </div>
     </div>
 
     <div class="subid-wrapper" style="margin-top: 15px;">
-        <span class="subid-title">Gắn nhãn theo dõi (Sub_ID - Tùy chọn)</span>
+        <span class="subid-title">Sub_ID (Không cần điền các ô này)</span>
         <div class="subid-grid">
             <input type="text" id="sub1" class="subid-input" placeholder="Sub 1">
             <input type="text" id="sub2" class="subid-input" placeholder="Sub 2">
@@ -196,7 +196,7 @@
                             row.innerHTML = `
                                 <div><span class="lbl">Gốc:</span> <span class="val">${item.original}</span></div>
                                 <div><span class="lbl">Sạch:</span> <span class="val clean">${item.resolved}</span></div>
-                                <div><span class="lbl">Affiliate:</span> <span class="val aff">${item.short || 'Lỗi'}</span></div>
+                                <div><span class="lbl">Sau chuyển đổi:</span> <span class="val aff">${item.short || 'Lỗi'}</span></div>
                             `;
                             debugContent.appendChild(row);
                         });
