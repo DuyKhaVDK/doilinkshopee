@@ -18,40 +18,45 @@
             display: flex; flex-direction: column; align-items: center; 
         }
         
-        /* 2. Style cho phần Logo và Tiêu đề */
+        /* Header Logo */
         .header-container {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 12px;
-            margin-bottom: 25px;
-            width: 100%;
-            max-width: 500px;
+            display: flex; align-items: center; justify-content: center;
+            gap: 12px; margin-bottom: 25px; width: 100%; max-width: 500px;
         }
         .logo-main {
-            width: 55px;
-            height: 55px;
-            border-radius: 12px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-            object-fit: cover;
+            width: 55px; height: 55px; border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1); object-fit: cover;
         }
         .header-container h2 {
-            color: #ee4d2d;
-            margin: 0;
-            font-size: 20px;
-            text-align: left;
-            line-height: 1.2;
+            color: #ee4d2d; margin: 0; font-size: 20px; text-align: left; line-height: 1.2;
         }
 
         .container { width: 100%; max-width: 500px; }
-        .input-box { background: white; border-radius: 20px; padding: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
-        textarea { width: 100%; height: 100px; border: 1px solid #f0f0f0; border-radius: 12px; padding: 15px; font-size: 16px; outline: none; resize: none; background: #fafafa; }
+        .input-box { background: white; border-radius: 20px; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
+
+        /* --- NHÓM NÚT DÁN & XÓA --- */
+        .input-actions {
+            display: flex; justify-content: flex-end; gap: 10px; margin-bottom: 10px;
+        }
+        .btn-small {
+            border: none; padding: 8px 15px; border-radius: 8px; font-size: 13px;
+            font-weight: 600; cursor: pointer; transition: 0.2s;
+        }
+        .btn-paste { background: #e3f2fd; color: #1976d2; } /* Màu xanh dương nhẹ */
+        .btn-clear { background: #f5f5f7; color: #8e8e93; } /* Màu xám iOS */
+        .btn-small:active { opacity: 0.6; transform: scale(0.95); }
+
+        textarea { 
+            width: 100%; height: 100px; border: 1px solid #f0f0f0; border-radius: 12px; 
+            padding: 15px; font-size: 16px; outline: none; resize: none; background: #fafafa; 
+        }
         
         .primary-btn { 
             width: 100%; background: #ee4d2d; color: white; border: none; padding: 18px; border-radius: 50px; 
             font-size: 18px; font-weight: bold; cursor: pointer; margin-top: 20px; box-shadow: 0 4px 15px rgba(238, 77, 45, 0.3);
         }
 
+        /* Kết quả */
         #productList { width: 100%; max-width: 500px; margin-top: 25px; display: flex; flex-direction: column; gap: 15px; }
         .notif-card { 
             background: #ffffff; border-radius: 15px; padding: 20px; display: flex; flex-direction: column; align-items: center; gap: 15px;
@@ -65,7 +70,7 @@
         .btn-buy { background: #ee4d2d; color: white !important; }
         .btn-copy { background: #34a853; color: white; }
 
-        /* --- FOOTER CHUYÊN NGHIỆP --- */
+        /* Footer */
         footer { margin-top: auto; padding: 30px 20px; text-align: center; width: 100%; max-width: 500px; }
         .copyright { font-size: 13px; color: #888; line-height: 1.6; letter-spacing: 0.3px; }
         .copyright b { color: #ee4d2d; font-weight: 700; }
@@ -80,6 +85,11 @@
         </div>
 
         <div class="input-box">
+            <div class="input-actions">
+                <button class="btn-small btn-paste" onclick="pasteFromClipboard()">📋 Dán link</button>
+                <button class="btn-small btn-clear" onclick="clearInput()">✕ Xóa</button>
+            </div>
+            
             <textarea id="inputText" placeholder="Dán link Shopee vào đây..."></textarea>
             <button class="primary-btn" onclick="processText()" id="btnConvert">CHUYỂN ĐỔI NGAY</button>
         </div>
@@ -88,6 +98,24 @@
     <div id="productList"></div>
 
     <script>
+        // Hàm Dán từ Clipboard
+        async function pasteFromClipboard() {
+            try {
+                const text = await navigator.clipboard.readText();
+                if (text) {
+                    document.getElementById('inputText').value = text;
+                }
+            } catch (err) {
+                alert('Không thể truy cập Clipboard. Bạn vui lòng dán thủ công nhé!');
+            }
+        }
+
+        // Hàm Xóa trắng ô nhập
+        function clearInput() {
+            document.getElementById('inputText').value = '';
+            document.getElementById('productList').innerHTML = '';
+        }
+
         function copyToClipboard(url) {
             navigator.clipboard.writeText(url).then(() => alert('Đã sao chép link!')).catch(() => alert('Lỗi sao chép!'));
         }
