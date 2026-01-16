@@ -3,222 +3,118 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Shopee Bulk Converter Pro</title>
+    <title>Converter Pro - Duy Kha</title>
     <style>
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f2f2f7; margin: 0; padding: 15px; display: flex; flex-direction: column; min-height: 100vh; }
-        h2 { text-align: center; color: #ee4d2d; margin: 10px 0 20px 0; font-size: 22px; }
-        
-        .main-container { display: flex; gap: 15px; flex: 1; flex-direction: column; }
-        
-        .box { 
-            display: flex; flex-direction: column; background: white; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); overflow: hidden; 
+        * { box-sizing: border-box; }
+        body { 
+            font-family: -apple-system, sans-serif; background: #f2f2f7; margin: 0; padding: 20px; 
+            display: flex; flex-direction: column; align-items: center; 
         }
-
-        .header-box { padding: 12px 15px; background: #fafafa; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
-        .header-title { font-weight: 600; color: #333; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px; }
-
-        .action-group { display: flex; gap: 8px; }
-        .icon-btn { border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 500; display: flex; align-items: center; gap: 5px; transition: background 0.2s; }
-        .btn-paste { background-color: #e3f2fd; color: #1976d2; }
-        .btn-clear { background-color: #ffebee; color: #c62828; }
-        .btn-copy { background-color: #e8f5e9; color: #2e7d32; }
-        .icon-btn:active { opacity: 0.7; transform: scale(0.98); }
-
-        textarea { 
-            width: 100%; border: none; padding: 15px; font-size: 15px; outline: none; line-height: 1.5; min-height: 150px; font-family: inherit; resize: vertical; 
+        .container { width: 100%; max-width: 500px; margin-top: 5vh; }
+        .input-box { background: white; border-radius: 20px; padding: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
+        textarea { width: 100%; height: 100px; border: 1px solid #f0f0f0; border-radius: 12px; padding: 15px; font-size: 16px; outline: none; resize: none; background: #fafafa; }
+        .primary-btn { 
+            width: 100%; background: #ee4d2d; color: white; border: none; padding: 18px; border-radius: 50px; 
+            font-size: 18px; font-weight: bold; cursor: pointer; margin-top: 20px; box-shadow: 0 4px 15px rgba(238, 77, 45, 0.3);
         }
-
-        /* --- PHẦN SUB ID (MỚI) --- */
-        .subid-wrapper {
-            background: white; border-radius: 12px; padding: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        #productList { width: 100%; max-width: 500px; margin-top: 25px; display: flex; flex-direction: column; gap: 15px; }
+        .notif-card { 
+            background: #ffffff; border-radius: 15px; padding: 20px; display: flex; flex-direction: column; align-items: center; gap: 15px;
+            border-top: 4px solid #ee4d2d; box-shadow: 0 5px 20px rgba(0,0,0,0.07); animation: popIn 0.3s ease-out;
         }
-        .subid-title { font-weight: 600; font-size: 13px; color: #555; margin-bottom: 10px; display: block;}
-        .subid-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
-        .subid-input {
-            width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; text-align: center;
-        }
-        .subid-input:focus { border-color: #ee4d2d; outline: none; background: #fffdfc; }
+        @keyframes popIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        .notif-status { font-size: 15px; font-weight: 700; color: #2e7d32; }
+        .btn-group { display: flex; gap: 10px; width: 100%; }
+        .btn-action { flex: 1; text-decoration: none; padding: 12px 5px; border-radius: 10px; font-size: 14px; font-weight: bold; text-align: center; border: none; cursor: pointer; }
+        .btn-buy { background: #ee4d2d; color: white !important; }
+        .btn-copy { background: #34a853; color: white; }
+        /* --- FOOTER CHUYÊN NGHIỆP --- */
+footer {
+    margin-top: auto;
+    padding: 30px 20px;
+    text-align: center;
+    width: 100%;
+    max-width: 500px;
+}
 
-        /* Responsive cho SubID trên mobile: Chia làm 2 dòng cho dễ bấm */
-        @media (max-width: 480px) {
-            .subid-grid { grid-template-columns: repeat(3, 1fr); }
-            .subid-input:nth-child(4), .subid-input:nth-child(5) { grid-column: span 1; }
-        }
+.copyright {
+    font-size: 13px;
+    color: #888;
+    line-height: 1.6;
+    letter-spacing: 0.3px;
+}
 
-        .controls { margin: 20px 0; }
-        button.primary-btn { 
-            width: 100%; background-color: #ee4d2d; color: white; border: none; padding: 15px; font-size: 18px; border-radius: 50px; cursor: pointer; font-weight: bold; 
-            box-shadow: 0 4px 15px rgba(238, 77, 45, 0.3); transition: transform 0.2s;
-        }
-        button.primary-btn:active { transform: scale(0.98); background-color: #d73211; }
-        button.primary-btn:disabled { background-color: #ccc; box-shadow: none; }
+.copyright b {
+    color: #ee4d2d; /* Màu cam Shopee đặc trưng của thương hiệu bạn */
+    font-weight: 700;
+}
 
-        .debug-section { background: white; padding: 15px; border-radius: 12px; margin-top: 20px; font-size: 12px; display: none;}
-        .debug-header { font-weight: bold; margin-bottom: 10px; color: #555; border-bottom: 1px solid #eee; padding-bottom: 5px; }
-        .debug-row { padding: 10px 0; border-bottom: 1px dashed #eee; display: flex; flex-direction: column; gap: 5px; }
-        .lbl { font-weight: bold; color: #777; width: 80px; display: inline-block; }
-        .val { word-break: break-all; }
-        .val.clean { color: #1976d2; }
-        .val.aff { color: #2e7d32; font-weight: bold; }
-
-        @media (min-width: 768px) {
-            .main-container { flex-direction: row; }
-            .box { flex: 1; }
-            button.primary-btn { width: auto; min-width: 250px; margin: 0 auto; display: block; }
-        }
+.footer-divider {
+    height: 1px;
+    background: linear-gradient(to right, transparent, #ddd, transparent);
+    margin-bottom: 15px;
+    width: 100%;
+}
     </style>
 </head>
 <body>
-
-    <h2>Chuyển đổi link Shopee - HÔM NAY CÓ SALE KHÔNG?</h2>
-
-    <div class="main-container">
-        <div class="box">
-            <div class="header-box">
-                <span class="header-title">Nhập link</span>
-                <div class="action-group">
-                    <button class="icon-btn btn-paste" onclick="pasteClipboard()">📋 Dán</button>
-                    <button class="icon-btn btn-clear" onclick="clearInput()">✕ Xóa</button>
-                </div>
-            </div>
-            <textarea id="inputText" placeholder="Dán nội dung vào đây..."></textarea>
-        </div>
-
-        <div class="box">
-            <div class="header-box">
-                <span class="header-title">Kết quả</span>
-                <button class="icon-btn btn-copy" onclick="copyResult()">Sao chép</button>
-            </div>
-            <textarea id="outputText" readonly placeholder="Link sau chuyển đổi sẽ hiện ở đây..."></textarea>
+    <div class="container">
+        <h2 style="text-align: center; color: #ee4d2d; margin-bottom: 25px;">🛍️ CHUYỂN ĐỔI LINK</h2>
+        <div class="input-box">
+            <textarea id="inputText" placeholder="Dán link Shopee vào đây..."></textarea>
+            <button class="primary-btn" onclick="processText()" id="btnConvert">CHUYỂN ĐỔI NGAY</button>
         </div>
     </div>
-
-    <div class="subid-wrapper" style="margin-top: 15px;">
-        <span class="subid-title">Sub_ID (Không cần điền các ô này)</span>
-        <div class="subid-grid">
-            <input type="text" id="sub1" class="subid-input" placeholder="Sub 1">
-            <input type="text" id="sub2" class="subid-input" placeholder="Sub 2">
-            <input type="text" id="sub3" class="subid-input" placeholder="Sub 3">
-            <input type="text" id="sub4" class="subid-input" placeholder="Sub 4">
-            <input type="text" id="sub5" class="subid-input" placeholder="Sub 5">
-        </div>
-    </div>
-
-    <div class="controls">
-        <button class="primary-btn" onclick="processText()" id="btnConvert">Chuyển đổi ngay</button>
-    </div>
-
-    <div class="debug-section" id="debugSection">
-        <div class="debug-header">Chi tiết xử lý</div>
-        <div id="debugContent"></div>
-    </div>
+    <div id="productList"></div>
 
     <script>
-        async function pasteClipboard() {
-            const inputArea = document.getElementById('inputText');
-            try {
-                const text = await navigator.clipboard.readText();
-                if (text) {
-                    inputArea.value = text;
-                    inputArea.style.backgroundColor = "#e3f2fd";
-                    setTimeout(() => inputArea.style.backgroundColor = "white", 300);
-                } else alert('Clipboard trống!');
-            } catch (err) {
-                alert('Vui lòng nhấn giữ vào ô nhập liệu và chọn "Dán".');
-                inputArea.focus();
-            }
+        function copyToClipboard(url) {
+            navigator.clipboard.writeText(url).then(() => alert('Đã sao chép link!')).catch(() => alert('Lỗi sao chép!'));
         }
-
-        function clearInput() {
-            document.getElementById('inputText').value = '';
-            document.getElementById('inputText').focus();
-        }
-
-        let hasCheckedClipboard = false;
-        document.getElementById('inputText').addEventListener('focus', async () => {
-            if (hasCheckedClipboard) return;
-            try {
-                const permission = await navigator.permissions.query({ name: 'clipboard-read' });
-                if (permission.state === 'granted' || permission.state === 'prompt') {
-                    const text = await navigator.clipboard.readText();
-                    if (text && (text.includes('shopee.vn') || text.includes('shp.ee'))) {
-                        if (confirm('Phát hiện link Shopee. Dán ngay?')) {
-                            document.getElementById('inputText').value = text;
-                        }
-                    }
-                }
-            } catch (e) {}
-            hasCheckedClipboard = true;
-        });
 
         async function processText() {
             const input = document.getElementById('inputText').value;
-            const output = document.getElementById('outputText');
             const btn = document.getElementById('btnConvert');
-            const debugSection = document.getElementById('debugSection');
-            const debugContent = document.getElementById('debugContent');
+            const list = document.getElementById('productList');
 
-            // --- LẤY DỮ LIỆU SUB ID ---
-            const subIds = [];
-            for (let i = 1; i <= 5; i++) {
-                const val = document.getElementById('sub' + i).value.trim();
-                if (val) subIds.push(val);
-            }
-            // --------------------------
-
-            if (!input.trim()) return alert('Vui lòng nhập nội dung!');
-
-            btn.disabled = true; btn.innerText = 'Đang xử lý...';
-            output.value = '';
-            debugSection.style.display = 'none';
-            debugContent.innerHTML = '';
+            if (!input.trim()) return alert('Bạn chưa dán link!');
+            btn.disabled = true; btn.innerText = 'ĐANG XỬ LÝ...';
+            list.innerHTML = ''; 
 
             try {
-                // Gọi qua redirect đã cấu hình trong netlify.toml
-                    const response = await fetch('/api/convert-text', {
+                const response = await fetch('/api/convert-text', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    // Gửi thêm subIds lên server
-                    body: JSON.stringify({ text: input, subIds: subIds }) 
+                    body: JSON.stringify({ text: input, subIds: [] }) 
                 });
-
                 const data = await response.json();
 
-                if (data.success) {
-                    output.value = data.newText;
-                    
-                    if (data.details && data.details.length > 0) {
-                        debugSection.style.display = 'block';
-                        data.details.forEach(item => {
-                            const row = document.createElement('div');
-                            row.className = 'debug-row';
-                            row.innerHTML = `
-                                <div><span class="lbl">Gốc:</span> <span class="val">${item.original}</span></div>
-                                <div><span class="lbl">Sạch:</span> <span class="val clean">${item.resolved}</span></div>
-                                <div><span class="lbl">Convert:</span> <span class="val aff">${item.short || 'Lỗi'}</span></div>
+                if (data.success && data.converted > 0) {
+                    data.details.forEach(item => {
+                        if (item.short) {
+                            const div = document.createElement('div');
+                            div.className = 'notif-card';
+                            div.innerHTML = `
+                                <div class="notif-status">✅ Đã chuyển đổi xong</div>
+                                <div class="btn-group">
+                                    <a href="${item.short}" target="_blank" class="btn-action btn-buy">MUA NGAY</a>
+                                    <button class="btn-action btn-copy" onclick="copyToClipboard('${item.short}')">SAO CHÉP LINK</button>
+                                </div>
                             `;
-                            debugContent.appendChild(row);
-                        });
-                    }
-                    if(data.converted === 0) alert('Không tìm thấy link Shopee hợp lệ.');
-                } else {
-                    alert('Lỗi: ' + data.error);
-                }
-            } catch (error) {
-                alert('Lỗi kết nối Server.');
-            } finally {
-                btn.disabled = false; btn.innerText = 'Chuyển đổi ngay';
-            }
-        }
-
-        function copyResult() {
-            const copyText = document.getElementById("outputText");
-            copyText.select();
-            copyText.setSelectionRange(0, 99999);
-            navigator.clipboard.writeText(copyText.value);
-            alert("Đã sao chép!");
+                            list.appendChild(div);
+                        }
+                    });
+                } else { alert('Không tìm thấy link Shopee!'); }
+            } catch (e) { alert('Lỗi hệ thống!'); }
+            finally { btn.disabled = false; btn.innerText = 'CHUYỂN ĐỔI NGAY'; }
         }
     </script>
+    <footer>
+        <div class="footer-divider"></div>
+        <div class="copyright">
+            © 2026 <b>HÔM NAY CÓ SALE KHÔNG?</b> • Phát triển bởi <b>Duy Kha Review</b>
+        </div>
+    </footer>
+</body>
 </body>
 </html>
