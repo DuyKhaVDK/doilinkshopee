@@ -3,20 +3,55 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Đổi link Shopee</title>
+    <title>Đổi link Shopee - HÔM NAY CÓ SALE KHÔNG?</title>
+
+    <link rel="icon" type="image/jpeg" href="logo.jpg">
+    <link rel="apple-touch-icon" href="logo.jpg">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Đổi link">
+
     <style>
         * { box-sizing: border-box; }
         body { 
             font-family: -apple-system, sans-serif; background: #f2f2f7; margin: 0; padding: 20px; 
             display: flex; flex-direction: column; align-items: center; 
         }
-        .container { width: 100%; max-width: 500px; margin-top: 5vh; }
+        
+        /* 2. Style cho phần Logo và Tiêu đề */
+        .header-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 25px;
+            width: 100%;
+            max-width: 500px;
+        }
+        .logo-main {
+            width: 55px;
+            height: 55px;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            object-fit: cover;
+        }
+        .header-container h2 {
+            color: #ee4d2d;
+            margin: 0;
+            font-size: 20px;
+            text-align: left;
+            line-height: 1.2;
+        }
+
+        .container { width: 100%; max-width: 500px; }
         .input-box { background: white; border-radius: 20px; padding: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
         textarea { width: 100%; height: 100px; border: 1px solid #f0f0f0; border-radius: 12px; padding: 15px; font-size: 16px; outline: none; resize: none; background: #fafafa; }
+        
         .primary-btn { 
             width: 100%; background: #ee4d2d; color: white; border: none; padding: 18px; border-radius: 50px; 
             font-size: 18px; font-weight: bold; cursor: pointer; margin-top: 20px; box-shadow: 0 4px 15px rgba(238, 77, 45, 0.3);
         }
+
         #productList { width: 100%; max-width: 500px; margin-top: 25px; display: flex; flex-direction: column; gap: 15px; }
         .notif-card { 
             background: #ffffff; border-radius: 15px; padding: 20px; display: flex; flex-direction: column; align-items: center; gap: 15px;
@@ -24,47 +59,32 @@
         }
         @keyframes popIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
         .notif-status { font-size: 15px; font-weight: 700; color: #2e7d32; }
+        
         .btn-group { display: flex; gap: 10px; width: 100%; }
         .btn-action { flex: 1; text-decoration: none; padding: 12px 5px; border-radius: 10px; font-size: 14px; font-weight: bold; text-align: center; border: none; cursor: pointer; }
         .btn-buy { background: #ee4d2d; color: white !important; }
         .btn-copy { background: #34a853; color: white; }
+
         /* --- FOOTER CHUYÊN NGHIỆP --- */
-footer {
-    margin-top: auto;
-    padding: 30px 20px;
-    text-align: center;
-    width: 100%;
-    max-width: 500px;
-}
-
-.copyright {
-    font-size: 13px;
-    color: #888;
-    line-height: 1.6;
-    letter-spacing: 0.3px;
-}
-
-.copyright b {
-    color: #ee4d2d; /* Màu cam Shopee đặc trưng của thương hiệu bạn */
-    font-weight: 700;
-}
-
-.footer-divider {
-    height: 1px;
-    background: linear-gradient(to right, transparent, #ddd, transparent);
-    margin-bottom: 15px;
-    width: 100%;
-}
+        footer { margin-top: auto; padding: 30px 20px; text-align: center; width: 100%; max-width: 500px; }
+        .copyright { font-size: 13px; color: #888; line-height: 1.6; letter-spacing: 0.3px; }
+        .copyright b { color: #ee4d2d; font-weight: 700; }
+        .footer-divider { height: 1px; background: linear-gradient(to right, transparent, #ddd, transparent); margin-bottom: 15px; width: 100%; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h2 style="text-align: center; color: #ee4d2d; margin-bottom: 25px;">CHUYỂN ĐỔI LINK SHOPEE</h2>
+        <div class="header-container">
+            <img src="logo.jpg" alt="Logo" class="logo-main">
+            <h2>CHUYỂN ĐỔI LINK<br>SHOPEE</h2>
+        </div>
+
         <div class="input-box">
             <textarea id="inputText" placeholder="Dán link Shopee vào đây..."></textarea>
             <button class="primary-btn" onclick="processText()" id="btnConvert">CHUYỂN ĐỔI NGAY</button>
         </div>
     </div>
+    
     <div id="productList"></div>
 
     <script>
@@ -109,12 +129,12 @@ footer {
             finally { btn.disabled = false; btn.innerText = 'CHUYỂN ĐỔI NGAY'; }
         }
     </script>
+
     <footer>
         <div class="footer-divider"></div>
         <div class="copyright">
             © 2026 <b>NHÓM: HÔM NAY CÓ SALE KHÔNG?</b> • Phát triển bởi <b>Duy Kha Review</b>
         </div>
     </footer>
-</body>
 </body>
 </html>
