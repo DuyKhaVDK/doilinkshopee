@@ -14,69 +14,100 @@
     <style>
         * { box-sizing: border-box; }
         body { 
-            font-family: -apple-system, sans-serif; background: #f2f2f7; margin: 0; padding: 20px; 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+            background: #f2f2f7; margin: 0; padding: 20px; 
             display: flex; flex-direction: column; align-items: center; 
+            min-height: 100vh;
         }
         
         /* Header Logo */
         .header-container {
             display: flex; align-items: center; justify-content: center;
-            gap: 12px; margin-bottom: 25px; width: 100%; max-width: 500px;
+            gap: 15px; margin-bottom: 25px; width: 100%; max-width: 500px;
         }
         .logo-main {
-            width: 55px; height: 55px; border-radius: 12px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1); object-fit: cover;
+            width: 60px; height: 60px; border-radius: 14px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08); object-fit: cover;
         }
         .header-container h2 {
-            color: #ee4d2d; margin: 0; font-size: 20px; text-align: left; line-height: 1.2;
+            color: #ee4d2d; margin: 0; font-size: 22px; font-weight: 800; text-align: left; line-height: 1.1;
         }
 
         .container { width: 100%; max-width: 500px; }
-        .input-box { background: white; border-radius: 20px; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
+        .input-box { background: white; border-radius: 24px; padding: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.04); }
 
-        .input-actions { display: flex; justify-content: flex-end; gap: 10px; margin-bottom: 10px; }
-        .btn-small { border: none; padding: 8px 15px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; transition: 0.2s; }
+        .input-actions { display: flex; justify-content: flex-end; gap: 10px; margin-bottom: 12px; }
+        .btn-small { border: none; padding: 8px 16px; border-radius: 10px; font-size: 13px; font-weight: 600; cursor: pointer; transition: 0.2s; }
         .btn-paste { background: #e3f2fd; color: #1976d2; }
         .btn-clear { background: #f5f5f7; color: #8e8e93; }
+        .btn-small:active { transform: scale(0.95); opacity: 0.8; }
 
         textarea { 
-            width: 100%; height: 100px; border: 1px solid #f0f0f0; border-radius: 12px; 
+            width: 100%; height: 110px; border: 1px solid #efeff4; border-radius: 16px; 
             padding: 15px; font-size: 16px; outline: none; resize: none; background: #fafafa; 
+            font-family: inherit; transition: border 0.3s;
         }
+        textarea:focus { border-color: #ee4d2d; background: #fff; }
         
         .primary-btn { 
             width: 100%; background: #ee4d2d; color: white; border: none; padding: 18px; border-radius: 50px; 
-            font-size: 18px; font-weight: bold; cursor: pointer; margin-top: 20px; box-shadow: 0 4px 15px rgba(238, 77, 45, 0.3);
+            font-size: 18px; font-weight: bold; cursor: pointer; margin-top: 20px; 
+            box-shadow: 0 8px 20px rgba(238, 77, 45, 0.25); transition: all 0.3s;
         }
+        .primary-btn:active { transform: scale(0.98); }
+        .primary-btn:disabled { background: #ffab91; cursor: not-allowed; }
 
-        /* Kết quả */
+        /* Kết quả hiển thị "CỰC TO & ĐẸP" */
         #productList { width: 100%; max-width: 500px; margin-top: 25px; display: flex; flex-direction: column; gap: 15px; }
-        .notif-card { 
-            background: #ffffff; border-radius: 15px; padding: 20px; display: flex; flex-direction: column; align-items: center; gap: 15px;
-            border-top: 4px solid #ee4d2d; box-shadow: 0 5px 20px rgba(0,0,0,0.07); animation: popIn 0.3s ease-out;
-        }
-        @keyframes popIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
-        .notif-status { font-size: 15px; font-weight: 700; color: #2e7d32; }
         
-        .btn-group { display: flex; gap: 10px; width: 100%; }
-        .btn-action { 
-            flex: 1; text-decoration: none; padding: 12px 5px; border-radius: 10px; font-size: 14px; 
-            font-weight: bold; text-align: center; border: none; cursor: pointer; transition: all 0.3s ease;
+        .notif-card { 
+            background: #ffffff; border-radius: 20px; padding: 20px; 
+            display: flex; flex-direction: column; gap: 15px;
+            border-top: 5px solid #ee4d2d; box-shadow: 0 10px 30px rgba(0,0,0,0.06); 
+            animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
-        .btn-buy { background: #ee4d2d; color: white !important; }
-        .btn-copy { background: #34a853; color: white; }
 
-        /* --- HIỆU ỨNG KHI ĐÃ SAO CHÉP --- */
+        .result-header { display: flex; gap: 18px; width: 100%; align-items: flex-start; }
+        
+        /* TĂNG KÍCH THƯỚC ẢNH LÊN 120PX */
+        .product-img { 
+            width: 120px; height: 120px; border-radius: 14px; object-fit: cover; 
+            border: 1px solid #f0f0f0; background: #f9f9f9; flex-shrink: 0;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        }
+        
+        .product-info { flex: 1; text-align: left; display: flex; flex-direction: column; gap: 8px; padding-top: 4px; }
+        
+        .product-name { 
+            font-size: 15px; font-weight: 700; color: #1c1c1e; line-height: 1.4;
+            display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+        }
+        
+        .notif-status { font-size: 13px; font-weight: 600; color: #34c759; display: flex; align-items: center; gap: 4px; }
+        
+        @keyframes popIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+        
+        .btn-group { display: flex; gap: 12px; width: 100%; }
+        .btn-action { 
+            flex: 1; text-decoration: none; padding: 14px 5px; border-radius: 14px; font-size: 14px; 
+            font-weight: 800; text-align: center; border: none; cursor: pointer; transition: all 0.3s ease;
+            text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        .btn-buy { background: #ee4d2d; color: white !important; box-shadow: 0 4px 12px rgba(238, 77, 45, 0.2); }
+        .btn-copy { background: #f2f2f7; color: #1c1c1e; }
+
+        /* Hiệu ứng sao chép */
         .btn-copy.copied {
-            background: #2e7d32;
-            transform: scale(1.05);
+            background: #34c759;
+            color: white;
+            transform: scale(1.03);
         }
 
         /* Footer */
-        footer { margin-top: auto; padding: 30px 20px; text-align: center; width: 100%; max-width: 500px; }
-        .copyright { font-size: 13px; color: #888; line-height: 1.6; letter-spacing: 0.3px; }
+        footer { margin-top: auto; padding: 40px 20px; text-align: center; width: 100%; max-width: 500px; }
+        .copyright { font-size: 13px; color: #a1a1a6; line-height: 1.6; letter-spacing: 0.3px; }
         .copyright b { color: #ee4d2d; font-weight: 700; }
-        .footer-divider { height: 1px; background: linear-gradient(to right, transparent, #ddd, transparent); margin-bottom: 15px; width: 100%; }
+        .footer-divider { height: 1px; background: linear-gradient(to right, transparent, #d1d1d6, transparent); margin-bottom: 20px; width: 100%; }
     </style>
 </head>
 <body>
@@ -92,7 +123,7 @@
                 <button class="btn-small btn-clear" onclick="clearInput()">✕ Xóa</button>
             </div>
             
-            <textarea id="inputText" placeholder="Dán link Shopee vào đây..."></textarea>
+            <textarea id="inputText" placeholder="Dán bài viết hoặc link Shopee vào đây..."></textarea>
             <button class="primary-btn" onclick="processText()" id="btnConvert">CHUYỂN ĐỔI NGAY</button>
         </div>
     </div>
@@ -112,22 +143,16 @@
             document.getElementById('productList').innerHTML = '';
         }
 
-        // --- HÀM SAO CHÉP CẢI TIẾN ---
         function copyToClipboard(url, btnElement) {
             navigator.clipboard.writeText(url).then(() => {
-                // Lưu lại nội dung cũ
                 const originalText = btnElement.innerText;
-                
-                // Đổi trạng thái nút
                 btnElement.innerText = '✅ ĐÃ XONG';
                 btnElement.classList.add('copied');
                 
-                // Trở về trạng thái cũ sau 2 giây
                 setTimeout(() => {
                     btnElement.innerText = originalText;
                     btnElement.classList.remove('copied');
                 }, 2000);
-
             }).catch(() => alert('Lỗi sao chép!'));
         }
 
@@ -137,14 +162,16 @@
             const list = document.getElementById('productList');
 
             if (!input.trim()) return alert('Bạn chưa dán link!');
-            btn.disabled = true; btn.innerText = 'ĐANG XỬ LÝ...';
+            
+            btn.disabled = true; 
+            btn.innerText = 'ĐANG XỬ LÝ...';
             list.innerHTML = ''; 
 
             try {
                 const response = await fetch('/api/convert-text', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ text: input, subIds: [] }) 
+                    body: JSON.stringify({ text: input, subIds: ["webchuyendoi"] }) 
                 });
                 const data = await response.json();
 
@@ -154,25 +181,38 @@
                             const div = document.createElement('div');
                             div.className = 'notif-card';
                             div.innerHTML = `
-                                <div class="notif-status">✅ Đã chuyển đổi xong</div>
+                                <div class="result-header">
+                                    ${item.imageUrl ? `<img src="${item.imageUrl}" class="product-img">` : '<div class="product-img" style="background:#f0f0f0; display:flex; align-items:center; justify-content:center; color:#ccc;">🖼️</div>'}
+                                    <div class="product-info">
+                                        <div class="product-name">${item.productName || 'Sản phẩm Shopee'}</div>
+                                        <div class="notif-status">✅ Đã chuyển đổi xong</div>
+                                    </div>
+                                </div>
                                 <div class="btn-group">
-                                    <a href="${item.short}" target="_blank" class="btn-action btn-buy">MUA NGAY</a>
-                                    <button class="btn-action btn-copy" onclick="copyToClipboard('${item.short}', this)">SAO CHÉP LINK</button>
+                                    <a href="${item.short}" target="_blank" class="btn-action btn-buy">🛒 MUA NGAY</a>
+                                    <button class="btn-action btn-copy" onclick="copyToClipboard('${item.short}', this)">🔗 SAO CHÉP LINK</button>
                                 </div>
                             `;
                             list.appendChild(div);
                         }
                     });
-                } else { alert('Không tìm thấy link Shopee!'); }
-            } catch (e) { alert('Lỗi hệ thống!'); }
-            finally { btn.disabled = false; btn.innerText = 'CHUYỂN ĐỔI NGAY'; }
+                } else { 
+                    alert('Không tìm thấy link Shopee hợp lệ!'); 
+                }
+            } catch (e) { 
+                alert('Lỗi hệ thống! Vui lòng thử lại sau.'); 
+            } finally { 
+                btn.disabled = false; 
+                btn.innerText = 'CHUYỂN ĐỔI NGAY'; 
+            }
         }
     </script>
 
     <footer>
         <div class="footer-divider"></div>
         <div class="copyright">
-            © 2026 <b>NHÓM: HÔM NAY CÓ SALE KHÔNG?</b> • Phát triển bởi <b>Duy Kha Review</b>
+            © 2026 <b>NHÓM: HÔM NAY CÓ SALE KHÔNG?</b><br>
+            Phát triển bởi <b>Duy Kha Review</b>
         </div>
     </footer>
 </body>
