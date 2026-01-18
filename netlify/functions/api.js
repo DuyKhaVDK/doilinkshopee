@@ -14,10 +14,9 @@ const APP_ID = process.env.APP_ID;
 const APP_SECRET = process.env.APP_SECRET;
 const SHOPEE_API_URL = 'https://open-api.affiliate.shopee.vn/graphql';
 
-// --- HÀM 1: LÀM SẠCH LINK CƠ BẢN (TỐI GIẢN ĐỂ CHẠY NHANH) ---
+// --- HÀM 1: LÀM SẠCH LINK & TRÍCH XUẤT ITEM ID ---
 async function resolveAndCleanUrl(inputUrl) {
     let finalUrl = inputUrl;
-    // Chỉ giải mã nếu là link rút gọn, không quét HTML để tránh bị Shopee chặn
     if (inputUrl.includes('s.shopee.vn') || inputUrl.includes('shp.ee') || inputUrl.includes('vn.shp.ee')) {
         try {
             const response = await axios.get(inputUrl, { 
@@ -28,25 +27,46 @@ async function resolveAndCleanUrl(inputUrl) {
             finalUrl = response.request.res.responseUrl || inputUrl;
         } catch (e) { console.log("Lỗi giải mã link"); }
     }
-    return finalUrl.split('?')[0].replace(/[.,;!?)]+$/, "");
+    const cleanUrl = finalUrl.split('?')[0].replace(/[.,;!?)]+$/, "");
+    
+    // Trích xuất ItemId từ URL (Ví dụ: ...-i.123.456 hoặc /product/123/456)
+    const match = cleanUrl.match(/(?:-i\.|\/product\/)\d+[\.\/](\d+)/);
+    const itemId = match ? match[1] : null;
+
+    return { cleanUrl, itemId };
 }
 
-// --- HÀM 2: GỌI API SHOPEE (GẮN MẶC ĐỊNH SUB_ID1) ---
+// --- HÀM 2: LẤY THÔNG TIN SẢN PHẨM (TÊN & ẢNH) ---
+async function getShopeeProductInfo(itemId) {
+    if (!itemId) return null;
+    const timestamp = Math.floor(Date.now() / 1000);
+    // Sử dụng Query productOfferV2 từ tài liệu bạn gửi
+    const query = `query { productOfferV2(itemId: ${itemId}) { nodes { productName imageUrl } } }`;
+    const payloadString = JSON.stringify({ query });
+    const signature = crypto.createHash('sha256').update(`${APP_ID}${timestamp}${payloadString}${APP_SECRET}`).digest('hex');
+
+    try {
+        const response = await axios.post(SHOPEE_API_URL, payloadString, {
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `SHA256 Credential=${APP_ID}, Timestamp=${timestamp}, Signature=${signature}`
+            }
+        });
+        const nodes = response.data.data?.productOfferV2?.nodes;
+        return nodes && nodes.length > 0 ? nodes[0] : null;
+    } catch (e) { return null; }
+}
+
+// --- HÀM 3: TẠO LINK RÚT GỌN ---
 async function getShopeeShortLink(originalUrl, userSubIds = []) {
     const timestamp = Math.floor(Date.now() / 1000);
-    
-    // GẮN MẶC ĐỊNH: Luôn ưu tiên 'webchuyendoi' ở vị trí đầu tiên
     let finalSubIds = ["webchuyendoi"]; 
-    
-    // Nếu người dùng có nhập thêm SubID ở giao diện, ta nối tiếp vào sau
     if (userSubIds && userSubIds.length > 0) {
         const validUserIds = userSubIds.filter(id => id && id.trim() !== "" && id !== "webchuyendoi");
-        finalSubIds = [...finalSubIds, ...validUserIds].slice(0, 5); // Shopee cho tối đa 5 SubID
+        finalSubIds = [...finalSubIds, ...validUserIds].slice(0, 5);
     }
-
     const formattedIds = finalSubIds.map(id => `"${id.trim()}"`).join(",");
     const query = `mutation { generateShortLink(input: { originUrl: "${originalUrl}", subIds: [${formattedIds}] }) { shortLink } }`;
-    
     const payloadString = JSON.stringify({ query });
     const signature = crypto.createHash('sha256').update(`${APP_ID}${timestamp}${payloadString}${APP_SECRET}`).digest('hex');
 
@@ -69,9 +89,20 @@ router.post('/convert-text', async (req, res) => {
     if (uniqueLinks.length === 0) return res.json({ success: false });
 
     const conversions = await Promise.all(uniqueLinks.map(async (url) => {
-        const cleanUrl = await resolveAndCleanUrl(url.startsWith('http') ? url : `https://${url}`);
-        const short = await getShopeeShortLink(cleanUrl, subIds);
-        return { short };
+        const fullUrl = url.startsWith('http') ? url : `https://${url}`;
+        const { cleanUrl, itemId } = await resolveAndCleanUrl(fullUrl);
+        
+        // Chạy song song lấy link và lấy thông tin sản phẩm để tối ưu tốc độ
+        const [short, info] = await Promise.all([
+            getShopeeShortLink(cleanUrl, subIds),
+            getShopeeProductInfo(itemId)
+        ]);
+
+        return { 
+            short,
+            productName: info?.productName || "",
+            imageUrl: info?.imageUrl || ""
+        };
     }));
 
     res.json({ success: true, converted: conversions.filter(c => c.short).length, details: conversions });
