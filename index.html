@@ -12,6 +12,7 @@
     <meta name="apple-mobile-web-app-title" content="Đổi link">
 
     <style>
+        
         * { box-sizing: border-box; }
         body { 
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
@@ -94,7 +95,7 @@
             text-transform: uppercase; letter-spacing: 0.5px;
         }
         .btn-buy { background: #ee4d2d; color: white !important; box-shadow: 0 4px 12px rgba(238, 77, 45, 0.2); }
-        .btn-copy { background: #f2f2f7; color: #1c1c1e; }
+        .btn-copy { background: #f2f2f7; color: #ed4d2d; }
 
         /* Hiệu ứng sao chép */
         .btn-copy.copied {
@@ -108,13 +109,47 @@
         .copyright { font-size: 13px; color: #a1a1a6; line-height: 1.6; letter-spacing: 0.3px; }
         .copyright b { color: #ee4d2d; font-weight: 700; }
         .footer-divider { height: 1px; background: linear-gradient(to right, transparent, #d1d1d6, transparent); margin-bottom: 20px; width: 100%; }
+        /* Style cho phần Liên hệ & Trợ giúp */
+        .contact-section {
+            width: 100%;
+            max-width: 500px;
+            margin-top: 30px;
+            text-align: center;
+        }
+        .contact-section h3 {
+            color: #1c1c1e;
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 15px;
+        }
+        .btn-zalo {
+            display: block;
+            width: 100%;
+            background: #0068ff; /* Màu xanh Zalo */
+            color: white !important;
+            text-decoration: none;
+            padding: 16px;
+            border-radius: 16px;
+            font-size: 15px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            transition: all 0.2s;
+            box-shadow: 0 4px 12px rgba(0, 104, 255, 0.15);
+        }
+        .btn-zalo.btn-help {
+            background: #ffffff;
+            color: #0068ff !important;
+            border: 1.5px solid #0068ff;
+            box-shadow: none;
+        }
+        .btn-zalo:active { transform: scale(0.98); opacity: 0.9; }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header-container">
             <img src="logo.jpg" alt="Logo" class="logo-main">
-            <h2>CHUYỂN ĐỔI LINK SHOPEE</h2>
+            <h2>ĐỔI LINK SHOPEE<br>ÁP MÃ 20%</h2>
         </div>
 
         <div class="input-box">
@@ -123,7 +158,7 @@
                 <button class="btn-small btn-clear" onclick="clearInput()">✕ Xóa</button>
             </div>
             
-            <textarea id="inputText" placeholder="Dán bài viết hoặc link Shopee vào đây..."></textarea>
+            <textarea id="inputText" placeholder="Dán link Shopee vào đây và nhấn chuyển đổi ngay..."></textarea>
             <button class="primary-btn" onclick="processText()" id="btnConvert">CHUYỂN ĐỔI NGAY</button>
         </div>
     </div>
@@ -171,7 +206,7 @@
                 const response = await fetch('/api/convert-text', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ text: input, subIds: ["webchuyendoi"] }) 
+                    body: JSON.stringify({ text: input, subIds: ["DK"] }) 
                 });
                 const data = await response.json();
 
@@ -189,8 +224,21 @@
                                     </div>
                                 </div>
                                 <div class="btn-group">
-                                    <a href="${item.short}" target="_blank" class="btn-action btn-buy">🛒 MUA NGAY</a>
                                     <button class="btn-action btn-copy" onclick="copyToClipboard('${item.short}', this)">🔗 SAO CHÉP LINK</button>
+                                </div>
+                                
+                                <div style="margin-top: 12px; padding: 12px; background: #fff9f0; border-radius: 12px; border: 1px dashed #ffab91; font-size: 13px; color: #444; line-height: 1.6;">
+                                    💡 Bạn hãy nhấn 
+                                    <b style="color: #ee4d2d; cursor: pointer; text-decoration: none;" 
+                                    onclick="copyToClipboard('${item.short}', this)">
+                                    "🔗 Sao chép link"
+                                    </b> 
+                                    và dán vào dưới bình luận post này để áp mã 25% nhé: 
+                                    <a href="https://www.facebook.com/share/p/1DMastLwTm/" target="_blank" style="color: #007bff; text-decoration: none; word-break: break-all; margin: 4px 0;"> https://www.facebook.com/share/p/1DMastLwTm/
+                                    </a>(đợi 0H có mã mới nha)
+                                    
+                                    <img src="facebook3.jpg" alt="Voucher 25%" 
+                                        style="width: 100%; margin-top: 10px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); border: 1px solid #eee;">
                                 </div>
                             `;
                             list.appendChild(div);
@@ -207,12 +255,19 @@
             }
         }
     </script>
-
+<div class="contact-section">
+    <h3>Liên hệ & Trợ giúp</h3>
+    <a href="https://zalo.me/g/zxiczc477" target="_blank" class="btn-zalo">
+        💬 Nhóm Zalo săn mã giảm giá
+    </a>
+    <a href="https://zalo.me/84333827185" target="_blank" class="btn-zalo btn-help">
+        🆘 Trợ giúp
+    </a>
+</div>
     <footer>
         <div class="footer-divider"></div>
         <div class="copyright">
-            © 2026 <b>NHÓM: HÔM NAY CÓ SALE KHÔNG?</b><br>
-            Phát triển bởi <b>Duy Kha Review</b>
+            © 2026 <a href="https://www.facebook.com/groups/homnaycosalekhong" style="text-decoration: none;"><b>NHÓM: HÔM NAY CÓ SALE KHÔNG?</b></a><br>
         </div>
     </footer>
 </body>
