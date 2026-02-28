@@ -11,7 +11,7 @@ const app = express();
 const router = express.Router();
 
 // --- BƯỚC QUAN TRỌNG: THAY LINK FIREBASE CỦA BẠN VÀO ĐÂY ---
-const FIREBASE_URL = "https://doilinkshopee-default-rtdb.asia-southeast1.firebasedatabase.app/";
+const FIREBASE_URL = "https://doilinkshopee-default-rtdb.asia-southeast1.firebasedatabase.app/stats.json";
 
 const APP_ID = process.env.APP_ID;     
 const APP_SECRET = process.env.APP_SECRET;
