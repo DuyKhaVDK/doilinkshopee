@@ -6,7 +6,9 @@ const axios = require('axios');
 const crypto = require('crypto');
 const cors = require('cors');
 const bodyParser = require('body-parser');
-const { getStore } = require('@netlify/blobs'); // Thư viện lưu trữ dữ liệu của Netlify
+const Blobs = require('@netlify/blobs');
+// Kiểm tra nếu getStore tồn tại, nếu không dùng Fallback
+const getStore = Blobs.getStore || (() => ({ get: async () => 0, setJSON: async () => {} }));
 
 const app = express();
 const router = express.Router();
