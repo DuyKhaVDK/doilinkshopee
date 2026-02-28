@@ -12,6 +12,44 @@
     <meta name="apple-mobile-web-app-title" content="Đổi link">
 
     <style>
+                /* Style cho bảng Admin */
+        #adminSection {
+            display: none; /* Ẩn mặc định */
+            width: 100%;
+            max-width: 500px;
+            margin-top: 30px;
+            padding: 20px;
+            background: #fff;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        #adminSection h3 { color: #1c1c1e; margin-bottom: 15px; }
+        .admin-input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            text-align: center;
+            font-size: 16px;
+        }
+        .stats-table {
+            width: 100%;
+            margin-top: 15px;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+        .stats-table td {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            text-align: left;
+        }
+        .stats-value {
+            font-weight: 800;
+            color: #ee4d2d;
+            text-align: right;
+        }
         
         * { box-sizing: border-box; }
         body { 
@@ -254,6 +292,44 @@
                 btn.innerText = 'CHUYỂN ĐỔI NGAY'; 
             }
         }
+        let logoClickCount = 0;
+
+
+document.querySelector('.logo-main').onclick = function() {
+    logoClickCount++;
+    if (logoClickCount === 5) {
+        document.getElementById('adminSection').style.display = 'block';
+        document.getElementById('adminSection').scrollIntoView({ behavior: 'smooth' });
+        alert('Chào Admin Duy Kha! Ô nhập mã đã xuất hiện.');
+        logoClickCount = 0; // Reset
+    }
+};
+
+
+async function fetchAdminStats() {
+    const secret = document.getElementById('adminSecretInput').value;
+    const content = document.getElementById('statsContent');
+    
+    if (!secret) return alert('Vui lòng nhập mã!');
+
+    try {
+        const response = await fetch('/api/admin/stats', {
+            headers: { 'x-admin-token': secret }
+        });
+        const data = await response.json();
+
+        if (data.success) {
+            document.getElementById('totalConverted').innerText = data.total_converted_links + ' link';
+            document.getElementById('projectName').innerText = data.project;
+            document.getElementById('lastUpdate').innerText = data.last_updated;
+            content.style.display = 'block';
+        } else {
+            alert('Mã bí mật không đúng!');
+        }
+    } catch (e) {
+        alert('Lỗi kết nối server!');
+    }
+}
     </script>
 <div class="contact-section">
     <h3>Liên hệ & Trợ giúp</h3>
@@ -264,6 +340,28 @@
         🆘 Trợ giúp
     </a>
 </div>
+    <div id="adminSection">
+        <h3>📊 Thống kê Hệ thống</h3>
+        <input type="password" id="adminSecretInput" class="admin-input" placeholder="Nhập mã bí mật...">
+        <button class="primary-btn" style="margin-top:0; padding:12px;" onclick="fetchAdminStats()">XEM BÁO CÁO</button>
+        
+        <div id="statsContent" style="display:none;">
+            <table class="stats-table">
+                <tr>
+                    <td>Tổng lượt chuyển đổi:</td>
+                    <td class="stats-value" id="totalConverted">0</td>
+                </tr>
+                <tr>
+                    <td>Dự án:</td>
+                    <td class="stats-value" id="projectName">-</td>
+                </tr>
+                <tr>
+                    <td>Cập nhật cuối:</td>
+                    <td class="stats-value" id="lastUpdate">-</td>
+                </tr>
+            </table>
+        </div>
+    </div>
     <footer>
         <div class="footer-divider"></div>
         <div class="copyright">
