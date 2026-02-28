@@ -10,7 +10,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@netlify/blobs": "^2.2.0",
+    "@netlify/blobs": "^2.2.4", 
     "axios": "^1.13.2",
     "body-parser": "^2.2.1",
     "cors": "^2.8.5",
@@ -18,5 +18,5 @@
     "dotenv": "^17.2.3",
     "express": "^5.2.1",
     "serverless-http": "^4.0.0"
-  }
+}
 }
