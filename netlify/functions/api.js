@@ -10,70 +10,41 @@ const bodyParser = require('body-parser');
 const app = express();
 const router = express.Router();
 
-// --- CẤU HÌNH QUAN TRỌNG ---
-// Duy Kha hãy thay link Firebase của bạn vào đây (Ví dụ: https://duykha-affiliate-default-rtdb.firebaseio.com/stats.json)
+// --- BƯỚC QUAN TRỌNG: THAY LINK FIREBASE CỦA BẠN VÀO ĐÂY ---
 const FIREBASE_URL = "https://doilinkshopee-default-rtdb.asia-southeast1.firebasedatabase.app/";
 
 const APP_ID = process.env.APP_ID;     
 const APP_SECRET = process.env.APP_SECRET;
-const ADMIN_SECRET = process.env.ADMIN_SECRET; // Mật mã vdk_123456 của bạn
+const ADMIN_SECRET = process.env.ADMIN_SECRET; 
 const SHOPEE_API_URL = 'https://open-api.affiliate.shopee.vn/graphql';
 
-// --- HÀM 1: GIẢI MÃ & LÀM SẠCH LINK (LOGIC PRO CỦA DUY KHA) ---
+// --- HÀM 1: GIẢI MÃ & LÀM SẠCH LINK (LOGIC CỦA DUY KHA) ---
 async function resolveAndProcessUrl(inputUrl) {
     let finalUrl = inputUrl;
     if (inputUrl.includes('s.shopee.vn') || inputUrl.includes('shp.ee') || inputUrl.includes('vn.shp.ee')) {
         try {
             const response = await axios.get(inputUrl, { 
-                maxRedirects: 10,
-                timeout: 8000,
-                headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36' },
+                maxRedirects: 10, timeout: 8000,
+                headers: { 'User-Agent': 'Mozilla/5.0...' },
                 validateStatus: null
             });
             finalUrl = response.request?.res?.responseUrl || response.headers['location'] || inputUrl;
-        } catch (e) { console.log(`>> Lỗi giải mã: ${inputUrl}`); }
+        } catch (e) { console.log(`Lỗi giải mã: ${inputUrl}`); }
     }
-
     const dashIMatch = finalUrl.match(/-i\.(\d+)\.(\d+)/);
-    const productPathMatch = finalUrl.match(/\/product\/\d+\/(\d+)/);
     const genericIdMatch = finalUrl.match(/(?:itemId=|\/product\/)(\d+)/);
-    
-    let itemId = null;
-    if (dashIMatch) itemId = dashIMatch[2];
-    else if (productPathMatch) itemId = productPathMatch[1];
-    else if (genericIdMatch) itemId = genericIdMatch[1];
-    else {
-        const lastDigitMatch = finalUrl.match(/\/(\d+)(?:\?|$)/);
-        itemId = lastDigitMatch ? lastDigitMatch[1] : null;
-    }
+    let itemId = dashIMatch ? dashIMatch[2] : (genericIdMatch ? genericIdMatch[1] : null);
 
-    let cleanedUrl = finalUrl;
     let baseUrl = finalUrl.split('?')[0];
+    let cleanedUrl = baseUrl;
+    const shopProductPattern = /shopee\.vn\/([^\/]+)\/(\d+)\/(\d+)/;
+    const match = baseUrl.match(shopProductPattern);
+    if (match) cleanedUrl = `https://shopee.vn/product/${match[2]}/${match[3]}`;
 
-    if (baseUrl.includes('/search')) {
-        try {
-            const urlObj = new URL(finalUrl);
-            const newParams = new URLSearchParams();
-            const allowedKeys = ['keyword', 'shop', 'evcode', 'signature', 'promotionId', 'mmp_pid'];
-            allowedKeys.forEach(key => { if (urlObj.searchParams.has(key)) newParams.append(key, urlObj.searchParams.get(key)); });
-            cleanedUrl = newParams.toString() ? `${baseUrl}?${newParams.toString()}` : baseUrl;
-        } catch (e) { cleanedUrl = baseUrl; }
-    } else {
-        const shopProductPattern = /shopee\.vn\/([^\/]+)\/(\d+)\/(\d+)/;
-        const match = baseUrl.match(shopProductPattern);
-        if (match) { cleanedUrl = `https://shopee.vn/product/${match[2]}/${match[3]}`; } 
-        else if (baseUrl.includes('/m/') || baseUrl.includes('/product/') || (baseUrl.split('/').length === 4)) { cleanedUrl = baseUrl; } 
-        else {
-            let tempUrl = finalUrl;
-            ['uls_trackid=', 'utm_source=', 'mmp_pid='].forEach(p => { if (tempUrl.includes(p)) tempUrl = tempUrl.split(p)[0]; });
-            if (tempUrl.endsWith('?') || tempUrl.endsWith('&')) tempUrl = tempUrl.slice(0, -1);
-            cleanedUrl = tempUrl;
-        }
-    }
     return { cleanedUrl, itemId };
 }
 
-// --- HÀM 2: LẤY THÔNG TIN SẢN PHẨM ---
+// --- HÀM 2: LẤY THÔNG TIN & TẠO LINK (Giữ nguyên) ---
 async function getShopeeProductInfo(itemId) {
     if (!itemId) return null;
     const timestamp = Math.floor(Date.now() / 1000);
@@ -88,7 +59,6 @@ async function getShopeeProductInfo(itemId) {
     } catch (e) { return null; }
 }
 
-// --- HÀM 3: TẠO LINK RÚT GỌN ---
 async function getShopeeShortLink(originalUrl, subIds = []) {
     const timestamp = Math.floor(Date.now() / 1000);
     let finalSubIds = subIds.length > 0 ? subIds : ["webchuyendoi"]; 
@@ -104,11 +74,9 @@ async function getShopeeShortLink(originalUrl, subIds = []) {
     } catch (e) { return null; }
 }
 
-// --- ROUTER CHUYỂN ĐỔI LINK & LƯU THỐNG KÊ ---
+// --- ROUTER CHÍNH: CHUYỂN ĐỔI & LƯU VÀO FIREBASE ---
 router.post('/convert-text', async (req, res) => {
     const { text, subIds } = req.body;
-    if (!text) return res.status(400).json({ error: 'Nội dung trống' });
-
     const urlRegex = /((?:https?:\/\/)?(?:www\.)?(?:shopee\.vn|vn\.shp\.ee|shp\.ee|s\.shopee\.vn)[^\s]*)/gi;
     const foundLinks = text.match(urlRegex) || [];
     const uniqueLinks = [...new Set(foundLinks)];
@@ -123,7 +91,7 @@ router.post('/convert-text', async (req, res) => {
 
     const successCount = conversions.filter(c => c.short).length;
 
-    // Cập nhật thống kê vào Firebase
+    // CẬP NHẬT SỐ LIỆU VÀO FIREBASE (ĐOẠN CÒN THIẾU CỦA BẠN)
     if (successCount > 0) {
         try {
             const firebaseRes = await axios.get(FIREBASE_URL);
@@ -132,16 +100,15 @@ router.post('/convert-text', async (req, res) => {
                 total_converted: currentTotal + successCount,
                 last_updated: new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })
             });
-        } catch (e) { console.error("Firebase Update Error:", e.message); }
+        } catch (e) { console.error("Lỗi cập nhật số liệu:", e.message); }
     }
 
     let newText = text;
     conversions.forEach(item => { if (item.short) newText = newText.split(item.original).join(item.short); });
-
     res.json({ success: true, newText, converted: successCount, details: conversions });
 });
 
-// --- ROUTER ADMIN: XEM THỐNG KÊ ---
+// --- ROUTER ADMIN: XEM BÁO CÁO ---
 router.get('/admin/stats', async (req, res) => {
     const token = req.headers['x-admin-token'];
     if (!token || token !== ADMIN_SECRET) {
@@ -155,9 +122,7 @@ router.get('/admin/stats', async (req, res) => {
             total_converted_links: response.data?.total_converted || 0,
             last_updated: response.data?.last_updated || "Chưa có dữ liệu"
         });
-    } catch (e) {
-        res.status(500).json({ success: false, error: "Lỗi kết nối database" });
-    }
+    } catch (e) { res.status(500).json({ success: false, error: "Lỗi kết nối database" }); }
 });
 
 app.use(cors());
