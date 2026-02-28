@@ -6,10 +6,14 @@ const axios = require('axios');
 const crypto = require('crypto');
 const cors = require('cors');
 const bodyParser = require('body-parser');
-const Blobs = require('@netlify/blobs');
-// Kiểm tra nếu getStore tồn tại, nếu không dùng Fallback
-const getStore = Blobs.getStore || (() => ({ get: async () => 0, setJSON: async () => {} }));
+// Thay đổi đoạn require cũ thành đoạn này:
+const blobs = require('@netlify/blobs');
+const getStore = blobs.getStore; 
 
+// Thêm một dòng kiểm tra để không bị sập server nếu lỗi thư viện
+if (typeof getStore !== 'function') {
+    console.error("LỖI: Không thể tìm thấy hàm getStore. Hãy kiểm tra lại phiên bản @netlify/blobs!");
+}
 const app = express();
 const router = express.Router();
 
