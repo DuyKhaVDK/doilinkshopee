@@ -11,8 +11,8 @@ const app = express();
 const router = express.Router();
 
 // --- CẤU HÌNH DATABASE ---
-const FIREBASE_URL = "https://doilinkshopee-default-rtdb.asia-southeast1.firebasedatabase.app/stats.json";
-const DAILY_BASE_URL = "https://doilinkshopee-default-rtdb.asia-southeast1.firebasedatabase.app/daily";
+const FIREBASE_URL = process.env.FIREBASE_URL;
+const DAILY_BASE_URL = process.env.DAILY_BASE_URL;
 
 const APP_ID = process.env.APP_ID;     
 const APP_SECRET = process.env.APP_SECRET;
