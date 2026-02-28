@@ -6,15 +6,17 @@ const axios = require('axios');
 const crypto = require('crypto');
 const cors = require('cors');
 const bodyParser = require('body-parser');
+const { getStore } = require('@netlify/blobs'); // Thư viện lưu trữ dữ liệu của Netlify
 
 const app = express();
 const router = express.Router();
 
 const APP_ID = process.env.APP_ID;     
 const APP_SECRET = process.env.APP_SECRET;
+const ADMIN_SECRET = process.env.ADMIN_SECRET; // Mã bí mật để xem thống kê
 const SHOPEE_API_URL = 'https://open-api.affiliate.shopee.vn/graphql';
 
-// --- HÀM 1: GIẢI MÃ, TRÍCH XUẤT ID & LÀM SẠCH LINK (LOGIC TỔNG HỢP) ---
+// --- HÀM 1: GIẢI MÃ, TRÍCH XUẤT ID & LÀM SẠCH LINK ---
 async function resolveAndProcessUrl(inputUrl) {
     let finalUrl = inputUrl;
     
@@ -33,7 +35,7 @@ async function resolveAndProcessUrl(inputUrl) {
         }
     }
 
-    // B. TRÍCH XUẤT ITEM ID (Lấy TRƯỚC khi làm sạch để không mất ID sản phẩm)
+    // B. TRÍCH XUẤT ITEM ID
     const dashIMatch = finalUrl.match(/-i\.(\d+)\.(\d+)/);
     const productPathMatch = finalUrl.match(/\/product\/\d+\/(\d+)/);
     const genericIdMatch = finalUrl.match(/(?:itemId=|\/product\/)(\d+)/);
@@ -47,11 +49,10 @@ async function resolveAndProcessUrl(inputUrl) {
         itemId = lastDigitMatch ? lastDigitMatch[1] : null;
     }
 
-    // C. LOGIC LÀM SẠCH LINK (LOGIC PRO TỪ SNIPPET)
+    // C. LOGIC LÀM SẠCH LINK
     let cleanedUrl = finalUrl;
     let baseUrl = finalUrl.split('?')[0];
 
-    // 1. Xử lý link Search (Whitelist tham số quan trọng)
     if (baseUrl.includes('/search')) {
         try {
             const urlObj = new URL(finalUrl);
@@ -62,20 +63,14 @@ async function resolveAndProcessUrl(inputUrl) {
             });
             cleanedUrl = newParams.toString() ? `${baseUrl}?${newParams.toString()}` : baseUrl;
         } catch (e) { cleanedUrl = baseUrl; }
-    } 
-    // 2. Chuyển đổi SHOP -> PRODUCT (Ví dụ: shopee.vn/ten-shop/123/456 -> /product/123/456)
-    else {
+    } else {
         const shopProductPattern = /shopee\.vn\/([^\/]+)\/(\d+)\/(\d+)/;
         const match = baseUrl.match(shopProductPattern);
         if (match) {
             cleanedUrl = `https://shopee.vn/product/${match[2]}/${match[3]}`;
-        } 
-        // 3. Cắt params cho các link chuẩn (product, m, hoặc link shop trơn)
-        else if (baseUrl.includes('/m/') || baseUrl.includes('/product/') || (baseUrl.split('/').length === 4)) {
+        } else if (baseUrl.includes('/m/') || baseUrl.includes('/product/') || (baseUrl.split('/').length === 4)) {
             cleanedUrl = baseUrl;
-        } 
-        // 4. Fallback: Cắt bỏ các tracking dính kèm
-        else {
+        } else {
             let tempUrl = finalUrl;
             ['uls_trackid=', 'utm_source=', 'mmp_pid='].forEach(p => {
                 if (tempUrl.includes(p)) tempUrl = tempUrl.split(p)[0];
@@ -84,11 +79,10 @@ async function resolveAndProcessUrl(inputUrl) {
             cleanedUrl = tempUrl;
         }
     }
-
     return { cleanedUrl, itemId };
 }
 
-// --- HÀM 2: LẤY THÔNG TIN SẢN PHẨM (DÙNG ID ĐÃ LẤY) ---
+// --- HÀM 2: LẤY THÔNG TIN SẢN PHẨM ---
 async function getShopeeProductInfo(itemId) {
     if (!itemId) return null;
     const timestamp = Math.floor(Date.now() / 1000);
@@ -110,8 +104,6 @@ async function getShopeeProductInfo(itemId) {
 // --- HÀM 3: TẠO LINK RÚT GỌN (KÈM SUBID) ---
 async function getShopeeShortLink(originalUrl, subIds = []) {
     const timestamp = Math.floor(Date.now() / 1000);
-    
-    // Xử lý Sub IDs: Ưu tiên subId truyền vào, mặc định là webchuyendoi
     let finalSubIds = ["webchuyendoi"]; 
     if (subIds && subIds.length > 0) {
         const validIds = subIds.filter(id => id && id.trim() !== "");
@@ -134,7 +126,7 @@ async function getShopeeShortLink(originalUrl, subIds = []) {
     } catch (e) { return null; }
 }
 
-// --- ROUTER XỬ LÝ CHÍNH ---
+// --- ROUTER 1: XỬ LÝ CHUYỂN ĐỔI LINK ---
 router.post('/convert-text', async (req, res) => {
     const { text, subIds } = req.body;
     if (!text) return res.status(400).json({ error: 'Nội dung trống' });
@@ -147,11 +139,7 @@ router.post('/convert-text', async (req, res) => {
 
     const conversions = await Promise.all(uniqueLinks.map(async (url) => {
         const fullUrl = url.startsWith('http') ? url : `https://${url}`;
-        
-        // 1. Giải mã, lấy ID và làm sạch link
         const { cleanedUrl, itemId } = await resolveAndProcessUrl(fullUrl);
-        
-        // 2. Chạy song song: Tạo link affiliate + Lấy thông tin sản phẩm
         const [short, info] = await Promise.all([
             getShopeeShortLink(cleanedUrl, subIds),
             getShopeeProductInfo(itemId)
@@ -165,7 +153,19 @@ router.post('/convert-text', async (req, res) => {
         };
     }));
 
-    // Tạo văn bản mới đã được thay thế link (dành cho tính năng chuyển đổi cả bài viết)
+    const successfulConversions = conversions.filter(c => c.short).length;
+
+    // Cập nhật số liệu thống kê vào Blobs
+    if (successfulConversions > 0) {
+        try {
+            const statsStore = getStore('link_stats');
+            let currentTotal = await statsStore.get('total_converted', { type: 'json' }) || 0;
+            await statsStore.setJSON('total_converted', currentTotal + successfulConversions);
+        } catch (e) {
+            console.error("Lỗi cập nhật Blobs:", e);
+        }
+    }
+
     let newText = text;
     conversions.forEach(item => {
         if (item.short) newText = newText.split(item.original).join(item.short);
@@ -174,9 +174,33 @@ router.post('/convert-text', async (req, res) => {
     res.json({ 
         success: true, 
         newText,
-        converted: conversions.filter(c => c.short).length, 
+        converted: successfulConversions, 
         details: conversions 
     });
+});
+
+// --- ROUTER 2: XEM THỐNG KÊ (DÀNH CHO ADMIN) ---
+router.get('/admin/stats', async (req, res) => {
+    const token = req.headers['x-admin-token'];
+// THÊM DÒNG NÀY ĐỂ KIỂM TRA TRONG TERMINAL
+    console.log("Mật khẩu nhận được:", token);
+    console.log("Mật khẩu trong hệ thống:", ADMIN_SECRET);
+    if (!token || token !== ADMIN_SECRET) {
+        return res.status(403).json({ success: false, error: 'Truy cập bị từ chối!' });
+    }
+
+    try {
+        const statsStore = getStore('link_stats');
+        const total = await statsStore.get('total_converted', { type: 'json' }) || 0;
+        res.json({
+            success: true,
+            project: "HÔM NAY CÓ SALE KHÔNG?",
+            total_converted_links: total,
+            last_updated: new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })
+        });
+    } catch (e) {
+        res.status(500).json({ success: false, error: 'Lỗi khi truy xuất dữ liệu' });
+    }
 });
 
 app.use(cors());
