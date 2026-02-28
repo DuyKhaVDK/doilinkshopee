@@ -7,21 +7,13 @@ const crypto = require('crypto');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 
-// --- SỬA LỖI TRUY XUẤT HÀM DỰA TRÊN DANH SÁCH [ 'Blobs' ] ---
-const netlifyBlobs = require('@netlify/blobs');
+// --- PHẦN SỬA LỖI TRUY XUẤT HÀM DỨT ĐIỂM ---
+const blobsLib = require('@netlify/blobs');
 
-// Logic truy tìm getStore cực mạnh dựa trên log thực tế của Duy Kha
-let getStore = netlifyBlobs.getStore;
-
-if (typeof getStore !== 'function' && netlifyBlobs.Blobs) {
-    // Nếu getStore không nằm ngoài, tìm trong đối tượng Blobs
-    getStore = netlifyBlobs.Blobs.getStore;
-}
-
-if (typeof getStore !== 'function' && netlifyBlobs.default) {
-    // Thử tìm trong thuộc tính default (dành cho một số cấu trúc bundle)
-    getStore = netlifyBlobs.default.getStore || (netlifyBlobs.default.Blobs && netlifyBlobs.default.Blobs.getStore);
-}
+// Logic truy tìm getStore: Thử mọi trường hợp có thể xảy ra trên server
+const getStore = blobsLib.getStore || 
+                 (blobsLib.Blobs && blobsLib.Blobs.getStore) || 
+                 (blobsLib.default && blobsLib.default.getStore);
 
 const app = express();
 const router = express.Router();
@@ -31,11 +23,11 @@ const APP_SECRET = process.env.APP_SECRET;
 const ADMIN_SECRET = process.env.ADMIN_SECRET;
 const SHOPEE_API_URL = 'https://open-api.affiliate.shopee.vn/graphql';
 
-// Log kiểm tra trạng thái ngay khi khởi động để Duy Kha xem trong Function Logs
+// Log kiểm tra cấu trúc để Admin Duy Kha theo dõi
 if (typeof getStore !== 'function') {
-    console.error("⚠️ LỖI: Vẫn không tìm thấy getStore. Cấu trúc thực tế:", JSON.stringify(Object.keys(netlifyBlobs)));
+    console.error("⚠️ LỖI: Vẫn không thấy getStore. Danh sách thuộc tính:", Object.keys(blobsLib));
 } else {
-    console.log("✅ THÀNH CÔNG: Hệ thống lưu trữ Blobs đã sẵn sàng hoạt động.");
+    console.log("✅ HỆ THỐNG: Hàm getStore đã được tìm thấy và sẵn sàng.");
 }
 
 // --- HÀM 1: GIẢI MÃ, TRÍCH XUẤT ID & LÀM SẠCH LINK ---
@@ -123,7 +115,7 @@ async function getShopeeShortLink(originalUrl, subIds = []) {
     } catch (e) { return null; }
 }
 
-// --- ROUTER 1: CHUYỂN ĐỔI LINK VÀ TĂNG SỐ ĐẾM ---
+// --- ROUTER 1: CHUYỂN ĐỔI LINK VÀ ĐẾM SỐ LƯỢNG ---
 router.post('/convert-text', async (req, res) => {
     const { text, subIds } = req.body;
     if (!text) return res.status(400).json({ error: 'Nội dung trống' });
@@ -138,14 +130,14 @@ router.post('/convert-text', async (req, res) => {
         return { original: url, short, productName: info?.productName || "Sản phẩm Shopee", imageUrl: info?.imageUrl || "" };
     }));
     const successCount = conversions.filter(c => c.short).length;
-    
-    // Tăng số lượng đếm
+
+    // Cập nhật số liệu vào Blobs
     if (successCount > 0 && typeof getStore === 'function') {
         try {
             const statsStore = getStore('link_stats');
             let currentTotal = await statsStore.get('total_converted', { type: 'json' }) || 0;
             await statsStore.setJSON('total_converted', currentTotal + successCount);
-        } catch (e) { console.error("Lỗi đếm link:", e.message); }
+        } catch (e) { console.error("Lỗi cập nhật đếm link:", e.message); }
     }
     res.json({ success: true, converted: successCount, details: conversions });
 });
@@ -153,23 +145,16 @@ router.post('/convert-text', async (req, res) => {
 // --- ROUTER 2: XEM THỐNG KÊ (ADMIN) ---
 router.get('/admin/stats', async (req, res) => {
     const token = req.headers['x-admin-token'];
-    
-    // Log bảo mật cho Duy Kha
-    console.log("Mật khẩu nhận được:", token);
-    console.log("Mật khẩu trong hệ thống:", ADMIN_SECRET);
-
     if (!token || token !== ADMIN_SECRET) {
         return res.status(403).json({ success: false, error: 'Mã bí mật không đúng!' });
     }
-
     try {
         if (typeof getStore !== 'function') {
-            throw new Error("Hệ thống lưu trữ chưa sẵn sàng. Vui lòng kiểm tra cấu trúc Blobs.");
+            throw new Error("Dịch vụ lưu trữ chưa sẵn sàng. Vui lòng kiểm tra log.");
         }
-
         const statsStore = getStore('link_stats');
-        const total = await statsStore.get('total_converted', { type: 'json' }) || 0;
-        
+        // Sử dụng strong consistency để Admin Duy Kha thấy số liệu mới nhất ngay lập tức
+        const total = await statsStore.get('total_converted', { type: 'json', consistency: "strong" }) || 0;
         res.json({
             success: true,
             project: "HÔM NAY CÓ SALE KHÔNG?",
