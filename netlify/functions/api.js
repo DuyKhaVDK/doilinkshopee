@@ -6,27 +6,30 @@ const axios = require('axios');
 const crypto = require('crypto');
 const cors = require('cors');
 const bodyParser = require('body-parser');
-// Thay đổi đoạn require cũ thành đoạn này:
-const blobs = require('@netlify/blobs');
-const getStore = blobs.getStore; 
 
-// Thêm một dòng kiểm tra để không bị sập server nếu lỗi thư viện
-if (typeof getStore !== 'function') {
-    console.error("LỖI: Không thể tìm thấy hàm getStore. Hãy kiểm tra lại phiên bản @netlify/blobs!");
-}
+// PHẦN SỬA LỖI QUAN TRỌNG: Cấu trúc lại cách gọi thư viện Blobs
+const blobs = require('@netlify/blobs');
+const getStore = blobs.getStore || (blobs.default && blobs.default.getStore);
+
 const app = express();
 const router = express.Router();
 
 const APP_ID = process.env.APP_ID;     
 const APP_SECRET = process.env.APP_SECRET;
-const ADMIN_SECRET = process.env.ADMIN_SECRET; // Mã bí mật để xem thống kê
+const ADMIN_SECRET = process.env.ADMIN_SECRET;
 const SHOPEE_API_URL = 'https://open-api.affiliate.shopee.vn/graphql';
+
+// Kiểm tra khởi tạo thư viện ngay khi chạy
+if (typeof getStore !== 'function') {
+    console.error("⚠️ CẢNH BÁO: Không tìm thấy hàm getStore. Vui lòng kiểm tra phiên bản @netlify/blobs!");
+} else {
+    console.log("✅ HỆ THỐNG: Hàm getStore đã sẵn sàng.");
+}
 
 // --- HÀM 1: GIẢI MÃ, TRÍCH XUẤT ID & LÀM SẠCH LINK ---
 async function resolveAndProcessUrl(inputUrl) {
     let finalUrl = inputUrl;
     
-    // A. GIẢI MÃ REDIRECT (Follow Redirect cho link rút gọn)
     if (inputUrl.includes('s.shopee.vn') || inputUrl.includes('shp.ee') || inputUrl.includes('vn.shp.ee')) {
         try {
             const response = await axios.get(inputUrl, { 
@@ -41,7 +44,6 @@ async function resolveAndProcessUrl(inputUrl) {
         }
     }
 
-    // B. TRÍCH XUẤT ITEM ID
     const dashIMatch = finalUrl.match(/-i\.(\d+)\.(\d+)/);
     const productPathMatch = finalUrl.match(/\/product\/\d+\/(\d+)/);
     const genericIdMatch = finalUrl.match(/(?:itemId=|\/product\/)(\d+)/);
@@ -55,7 +57,6 @@ async function resolveAndProcessUrl(inputUrl) {
         itemId = lastDigitMatch ? lastDigitMatch[1] : null;
     }
 
-    // C. LOGIC LÀM SẠCH LINK
     let cleanedUrl = finalUrl;
     let baseUrl = finalUrl.split('?')[0];
 
@@ -107,7 +108,7 @@ async function getShopeeProductInfo(itemId) {
     } catch (e) { return null; }
 }
 
-// --- HÀM 3: TẠO LINK RÚT GỌN (KÈM SUBID) ---
+// --- HÀM 3: TẠO LINK RÚT GỌN ---
 async function getShopeeShortLink(originalUrl, subIds = []) {
     const timestamp = Math.floor(Date.now() / 1000);
     let finalSubIds = ["webchuyendoi"]; 
@@ -132,7 +133,7 @@ async function getShopeeShortLink(originalUrl, subIds = []) {
     } catch (e) { return null; }
 }
 
-// --- ROUTER 1: XỬ LÝ CHUYỂN ĐỔI LINK ---
+// --- ROUTER CHÍNH: CHUYỂN ĐỔI LINK ---
 router.post('/convert-text', async (req, res) => {
     const { text, subIds } = req.body;
     if (!text) return res.status(400).json({ error: 'Nội dung trống' });
@@ -150,54 +151,42 @@ router.post('/convert-text', async (req, res) => {
             getShopeeShortLink(cleanedUrl, subIds),
             getShopeeProductInfo(itemId)
         ]);
-
-        return { 
-            original: url,
-            short,
-            productName: info?.productName || "Sản phẩm Shopee",
-            imageUrl: info?.imageUrl || ""
-        };
+        return { original: url, short, productName: info?.productName || "Sản phẩm Shopee", imageUrl: info?.imageUrl || "" };
     }));
 
-    const successfulConversions = conversions.filter(c => c.short).length;
+    const successCount = conversions.filter(c => c.short).length;
 
-    // Cập nhật số liệu thống kê vào Blobs
-    if (successfulConversions > 0) {
+    // Cập nhật số liệu đếm thành công
+    if (successCount > 0 && typeof getStore === 'function') {
         try {
             const statsStore = getStore('link_stats');
             let currentTotal = await statsStore.get('total_converted', { type: 'json' }) || 0;
-            await statsStore.setJSON('total_converted', currentTotal + successfulConversions);
-        } catch (e) {
-            console.error("Lỗi cập nhật Blobs:", e);
-        }
+            await statsStore.setJSON('total_converted', currentTotal + successCount);
+        } catch (e) { console.error("Lỗi đếm link:", e.message); }
     }
 
-    let newText = text;
-    conversions.forEach(item => {
-        if (item.short) newText = newText.split(item.original).join(item.short);
-    });
-
-    res.json({ 
-        success: true, 
-        newText,
-        converted: successfulConversions, 
-        details: conversions 
-    });
+    res.json({ success: true, converted: successCount, details: conversions });
 });
 
-// --- ROUTER 2: XEM THỐNG KÊ (DÀNH CHO ADMIN) ---
+// --- ROUTER ADMIN: XEM THỐNG KÊ ---
 router.get('/admin/stats', async (req, res) => {
     const token = req.headers['x-admin-token'];
-// THÊM DÒNG NÀY ĐỂ KIỂM TRA TRONG TERMINAL
+    
     console.log("Mật khẩu nhận được:", token);
     console.log("Mật khẩu trong hệ thống:", ADMIN_SECRET);
+
     if (!token || token !== ADMIN_SECRET) {
-        return res.status(403).json({ success: false, error: 'Truy cập bị từ chối!' });
+        return res.status(403).json({ success: false, error: 'Mã bí mật không đúng!' });
     }
 
     try {
+        if (typeof getStore !== 'function') {
+            throw new Error("Thư viện lưu trữ chưa sẵn sàng.");
+        }
+
         const statsStore = getStore('link_stats');
         const total = await statsStore.get('total_converted', { type: 'json' }) || 0;
+        
         res.json({
             success: true,
             project: "HÔM NAY CÓ SALE KHÔNG?",
@@ -205,7 +194,8 @@ router.get('/admin/stats', async (req, res) => {
             last_updated: new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })
         });
     } catch (e) {
-        res.status(500).json({ success: false, error: 'Lỗi khi truy xuất dữ liệu' });
+        console.error("LỖI ADMIN:", e.message);
+        res.status(500).json({ success: false, error: "Lỗi hệ thống: " + e.message });
     }
 });
 
