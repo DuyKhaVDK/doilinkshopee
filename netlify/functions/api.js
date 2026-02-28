@@ -1,3 +1,4 @@
+// netlify/functions/api.js
 require('dotenv').config();
 const express = require('express');
 const serverless = require('serverless-http');
@@ -6,25 +7,19 @@ const crypto = require('crypto');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 
-// --- CẬP NHẬT DỨT ĐIỂM CHO @netlify/blobs ^2.0.0 ---
-const { getStore } = require('@netlify/blobs');
-
 const app = express();
 const router = express.Router();
 
-const APP_ID = process.env.APP_ID;      
+// --- CẤU HÌNH QUAN TRỌNG ---
+// Duy Kha hãy thay link Firebase của bạn vào đây (Ví dụ: https://duykha-affiliate-default-rtdb.firebaseio.com/stats.json)
+const FIREBASE_URL = "https://doilinkshopee-default-rtdb.asia-southeast1.firebasedatabase.app/";
+
+const APP_ID = process.env.APP_ID;     
 const APP_SECRET = process.env.APP_SECRET;
-const ADMIN_SECRET = process.env.ADMIN_SECRET;
+const ADMIN_SECRET = process.env.ADMIN_SECRET; // Mật mã vdk_123456 của bạn
 const SHOPEE_API_URL = 'https://open-api.affiliate.shopee.vn/graphql';
 
-// Log kiểm tra trạng thái dịch vụ khi khởi tạo
-if (typeof getStore !== 'function') {
-    console.error("⚠️ LỖI: Không thể tìm thấy hàm getStore. Hãy kiểm tra lại cài đặt Netlify Blobs.");
-} else {
-    console.log("✅ HỆ THỐNG: Dịch vụ lưu trữ Blobs (v2) đã được cấu hình thành công.");
-}
-
-// --- HÀM 1: GIẢI MÃ, TRÍCH XUẤT ID & LÀM SẠCH LINK ---
+// --- HÀM 1: GIẢI MÃ & LÀM SẠCH LINK (LOGIC PRO CỦA DUY KHA) ---
 async function resolveAndProcessUrl(inputUrl) {
     let finalUrl = inputUrl;
     if (inputUrl.includes('s.shopee.vn') || inputUrl.includes('shp.ee') || inputUrl.includes('vn.shp.ee')) {
@@ -42,8 +37,8 @@ async function resolveAndProcessUrl(inputUrl) {
     const dashIMatch = finalUrl.match(/-i\.(\d+)\.(\d+)/);
     const productPathMatch = finalUrl.match(/\/product\/\d+\/(\d+)/);
     const genericIdMatch = finalUrl.match(/(?:itemId=|\/product\/)(\d+)/);
-    let itemId = null;
     
+    let itemId = null;
     if (dashIMatch) itemId = dashIMatch[2];
     else if (productPathMatch) itemId = productPathMatch[1];
     else if (genericIdMatch) itemId = genericIdMatch[1];
@@ -96,12 +91,8 @@ async function getShopeeProductInfo(itemId) {
 // --- HÀM 3: TẠO LINK RÚT GỌN ---
 async function getShopeeShortLink(originalUrl, subIds = []) {
     const timestamp = Math.floor(Date.now() / 1000);
-    let finalSubIds = ["webchuyendoi"]; 
-    if (subIds && subIds.length > 0) {
-        const validIds = subIds.filter(id => id && id.trim() !== "");
-        if (validIds.length > 0) finalSubIds = validIds.map(id => id.trim());
-    }
-    const formattedIds = finalSubIds.map(id => `"${id}"`).join(",");
+    let finalSubIds = subIds.length > 0 ? subIds : ["webchuyendoi"]; 
+    const formattedIds = finalSubIds.map(id => `"${id.trim()}"`).join(",");
     const query = `mutation { generateShortLink(input: { originUrl: "${originalUrl}", subIds: [${formattedIds}] }) { shortLink } }`;
     const payloadString = JSON.stringify({ query });
     const signature = crypto.createHash('sha256').update(`${APP_ID}${timestamp}${payloadString}${APP_SECRET}`).digest('hex');
@@ -113,72 +104,63 @@ async function getShopeeShortLink(originalUrl, subIds = []) {
     } catch (e) { return null; }
 }
 
-// --- ROUTER 1: CHUYỂN ĐỔI LINK VÀ ĐẾM SỐ LƯỢNG ---
+// --- ROUTER CHUYỂN ĐỔI LINK & LƯU THỐNG KÊ ---
 router.post('/convert-text', async (req, res) => {
     const { text, subIds } = req.body;
     if (!text) return res.status(400).json({ error: 'Nội dung trống' });
-    
+
     const urlRegex = /((?:https?:\/\/)?(?:www\.)?(?:shopee\.vn|vn\.shp\.ee|shp\.ee|s\.shopee\.vn)[^\s]*)/gi;
     const foundLinks = text.match(urlRegex) || [];
     const uniqueLinks = [...new Set(foundLinks)];
-    
+
     if (uniqueLinks.length === 0) return res.json({ success: false, converted: 0 });
 
     const conversions = await Promise.all(uniqueLinks.map(async (url) => {
-        const fullUrl = url.startsWith('http') ? url : `https://${url}`;
-        const { cleanedUrl, itemId } = await resolveAndProcessUrl(fullUrl);
+        const { cleanedUrl, itemId } = await resolveAndProcessUrl(url.startsWith('http') ? url : `https://${url}`);
         const [short, info] = await Promise.all([ getShopeeShortLink(cleanedUrl, subIds), getShopeeProductInfo(itemId) ]);
         return { original: url, short, productName: info?.productName || "Sản phẩm Shopee", imageUrl: info?.imageUrl || "" };
     }));
-    
+
     const successCount = conversions.filter(c => c.short).length;
 
-    // Cập nhật số liệu vào Blobs
-    if (successCount > 0 && typeof getStore === 'function') {
+    // Cập nhật thống kê vào Firebase
+    if (successCount > 0) {
         try {
-            const statsStore = getStore('link_stats');
-            let currentTotal = await statsStore.get('total_converted', { type: 'json' }) || 0;
-            await statsStore.setJSON('total_converted', currentTotal + successCount);
-        } catch (e) { console.error("Lỗi cập nhật đếm link:", e.message); }
+            const firebaseRes = await axios.get(FIREBASE_URL);
+            const currentTotal = firebaseRes.data?.total_converted || 0;
+            await axios.patch(FIREBASE_URL, { 
+                total_converted: currentTotal + successCount,
+                last_updated: new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })
+            });
+        } catch (e) { console.error("Firebase Update Error:", e.message); }
     }
-    res.json({ success: true, converted: successCount, details: conversions });
+
+    let newText = text;
+    conversions.forEach(item => { if (item.short) newText = newText.split(item.original).join(item.short); });
+
+    res.json({ success: true, newText, converted: successCount, details: conversions });
 });
 
-// --- ROUTER 2: XEM THỐNG KÊ (ADMIN) ---
+// --- ROUTER ADMIN: XEM THỐNG KÊ ---
 router.get('/admin/stats', async (req, res) => {
     const token = req.headers['x-admin-token'];
-    
     if (!token || token !== ADMIN_SECRET) {
         return res.status(403).json({ success: false, error: 'Mã bí mật không đúng!' });
     }
-
     try {
-        // Kiểm tra dứt điểm hàm getStore trước khi sử dụng
-        if (typeof getStore !== 'function') {
-            return res.status(500).json({ 
-                success: false, 
-                error: "Dịch vụ lưu trữ chưa sẵn sàng. Hãy chạy 'netlify link' nếu đang test ở local." 
-            });
-        }
-
-        const statsStore = getStore('link_stats');
-        // Sử dụng strong consistency để Admin thấy số liệu mới nhất ngay lập tức
-        const total = await statsStore.get('total_converted', { type: 'json', consistency: "strong" }) || 0;
-        
+        const response = await axios.get(FIREBASE_URL);
         res.json({
             success: true,
             project: "HÔM NAY CÓ SALE KHÔNG?",
-            total_converted_links: total,
-            last_updated: new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })
+            total_converted_links: response.data?.total_converted || 0,
+            last_updated: response.data?.last_updated || "Chưa có dữ liệu"
         });
     } catch (e) {
-        console.error("LỖI TRUY XUẤT ADMIN:", e.message);
-        res.status(500).json({ success: false, error: "Lỗi kết nối Blobs: " + e.message });
+        res.status(500).json({ success: false, error: "Lỗi kết nối database" });
     }
 });
 
 app.use(cors());
 app.use(bodyParser.json());
 app.use('/api', router);
-
 module.exports.handler = serverless(app);
