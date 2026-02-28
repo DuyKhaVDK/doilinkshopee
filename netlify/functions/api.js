@@ -1,4 +1,3 @@
-// netlify/functions/api.js
 require('dotenv').config();
 const express = require('express');
 const serverless = require('serverless-http');
@@ -7,27 +6,22 @@ const crypto = require('crypto');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 
-// --- PHẦN SỬA LỖI TRUY XUẤT HÀM DỨT ĐIỂM ---
-const blobsLib = require('@netlify/blobs');
-
-// Logic truy tìm getStore: Thử mọi trường hợp có thể xảy ra trên server
-const getStore = blobsLib.getStore || 
-                 (blobsLib.Blobs && blobsLib.Blobs.getStore) || 
-                 (blobsLib.default && blobsLib.default.getStore);
+// --- CẬP NHẬT DỨT ĐIỂM CHO @netlify/blobs ^2.0.0 ---
+const { getStore } = require('@netlify/blobs');
 
 const app = express();
 const router = express.Router();
 
-const APP_ID = process.env.APP_ID;     
+const APP_ID = process.env.APP_ID;      
 const APP_SECRET = process.env.APP_SECRET;
 const ADMIN_SECRET = process.env.ADMIN_SECRET;
 const SHOPEE_API_URL = 'https://open-api.affiliate.shopee.vn/graphql';
 
-// Log kiểm tra cấu trúc để Admin Duy Kha theo dõi
+// Log kiểm tra trạng thái dịch vụ khi khởi tạo
 if (typeof getStore !== 'function') {
-    console.error("⚠️ LỖI: Vẫn không thấy getStore. Danh sách thuộc tính:", Object.keys(blobsLib));
+    console.error("⚠️ LỖI: Không thể tìm thấy hàm getStore. Hãy kiểm tra lại cài đặt Netlify Blobs.");
 } else {
-    console.log("✅ HỆ THỐNG: Hàm getStore đã được tìm thấy và sẵn sàng.");
+    console.log("✅ HỆ THỐNG: Dịch vụ lưu trữ Blobs (v2) đã được cấu hình thành công.");
 }
 
 // --- HÀM 1: GIẢI MÃ, TRÍCH XUẤT ID & LÀM SẠCH LINK ---
@@ -44,10 +38,12 @@ async function resolveAndProcessUrl(inputUrl) {
             finalUrl = response.request?.res?.responseUrl || response.headers['location'] || inputUrl;
         } catch (e) { console.log(`>> Lỗi giải mã: ${inputUrl}`); }
     }
+
     const dashIMatch = finalUrl.match(/-i\.(\d+)\.(\d+)/);
     const productPathMatch = finalUrl.match(/\/product\/\d+\/(\d+)/);
     const genericIdMatch = finalUrl.match(/(?:itemId=|\/product\/)(\d+)/);
     let itemId = null;
+    
     if (dashIMatch) itemId = dashIMatch[2];
     else if (productPathMatch) itemId = productPathMatch[1];
     else if (genericIdMatch) itemId = genericIdMatch[1];
@@ -55,8 +51,10 @@ async function resolveAndProcessUrl(inputUrl) {
         const lastDigitMatch = finalUrl.match(/\/(\d+)(?:\?|$)/);
         itemId = lastDigitMatch ? lastDigitMatch[1] : null;
     }
+
     let cleanedUrl = finalUrl;
     let baseUrl = finalUrl.split('?')[0];
+
     if (baseUrl.includes('/search')) {
         try {
             const urlObj = new URL(finalUrl);
@@ -119,16 +117,20 @@ async function getShopeeShortLink(originalUrl, subIds = []) {
 router.post('/convert-text', async (req, res) => {
     const { text, subIds } = req.body;
     if (!text) return res.status(400).json({ error: 'Nội dung trống' });
+    
     const urlRegex = /((?:https?:\/\/)?(?:www\.)?(?:shopee\.vn|vn\.shp\.ee|shp\.ee|s\.shopee\.vn)[^\s]*)/gi;
     const foundLinks = text.match(urlRegex) || [];
     const uniqueLinks = [...new Set(foundLinks)];
+    
     if (uniqueLinks.length === 0) return res.json({ success: false, converted: 0 });
+
     const conversions = await Promise.all(uniqueLinks.map(async (url) => {
         const fullUrl = url.startsWith('http') ? url : `https://${url}`;
         const { cleanedUrl, itemId } = await resolveAndProcessUrl(fullUrl);
         const [short, info] = await Promise.all([ getShopeeShortLink(cleanedUrl, subIds), getShopeeProductInfo(itemId) ]);
         return { original: url, short, productName: info?.productName || "Sản phẩm Shopee", imageUrl: info?.imageUrl || "" };
     }));
+    
     const successCount = conversions.filter(c => c.short).length;
 
     // Cập nhật số liệu vào Blobs
@@ -145,16 +147,24 @@ router.post('/convert-text', async (req, res) => {
 // --- ROUTER 2: XEM THỐNG KÊ (ADMIN) ---
 router.get('/admin/stats', async (req, res) => {
     const token = req.headers['x-admin-token'];
+    
     if (!token || token !== ADMIN_SECRET) {
         return res.status(403).json({ success: false, error: 'Mã bí mật không đúng!' });
     }
+
     try {
+        // Kiểm tra dứt điểm hàm getStore trước khi sử dụng
         if (typeof getStore !== 'function') {
-            throw new Error("Dịch vụ lưu trữ chưa sẵn sàng. Vui lòng kiểm tra log.");
+            return res.status(500).json({ 
+                success: false, 
+                error: "Dịch vụ lưu trữ chưa sẵn sàng. Hãy chạy 'netlify link' nếu đang test ở local." 
+            });
         }
+
         const statsStore = getStore('link_stats');
-        // Sử dụng strong consistency để Admin Duy Kha thấy số liệu mới nhất ngay lập tức
+        // Sử dụng strong consistency để Admin thấy số liệu mới nhất ngay lập tức
         const total = await statsStore.get('total_converted', { type: 'json', consistency: "strong" }) || 0;
+        
         res.json({
             success: true,
             project: "HÔM NAY CÓ SALE KHÔNG?",
@@ -162,12 +172,13 @@ router.get('/admin/stats', async (req, res) => {
             last_updated: new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })
         });
     } catch (e) {
-        console.error("LỖI ADMIN:", e.message);
-        res.status(500).json({ success: false, error: "Lỗi hệ thống: " + e.message });
+        console.error("LỖI TRUY XUẤT ADMIN:", e.message);
+        res.status(500).json({ success: false, error: "Lỗi kết nối Blobs: " + e.message });
     }
 });
 
 app.use(cors());
 app.use(bodyParser.json());
 app.use('/api', router);
+
 module.exports.handler = serverless(app);
