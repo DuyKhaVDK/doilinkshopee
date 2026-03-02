@@ -323,9 +323,36 @@ async function fetchAdminStats() {
             document.getElementById('totalConverted').innerText = data.total_converted_links + ' link';
             document.getElementById('projectName').innerText = data.project;
             document.getElementById('lastUpdate').innerText = data.last_updated;
+            
+            // HIỂN THỊ LỊCH SỬ THEO NGÀY
+            let dailyHtml = '<div style="margin-top:15px; border-top:1px solid #eee; padding-top:15px;">' +
+                            '<b style="font-size:14px; color:#1c1c1e;">📅 Lịch sử 7 ngày gần nhất:</b>' +
+                            '<table class="stats-table">';
+            
+            if (data.daily) {
+                const dates = Object.keys(data.daily).sort().reverse().slice(0, 7);
+                dates.forEach(date => {
+                    dailyHtml += `<tr><td>${date}:</td><td class="stats-value">${data.daily[date]} link</td></tr>`;
+                });
+            } else {
+                dailyHtml += '<tr><td colspan="2" style="text-align:center;">Chưa có dữ liệu ngày</td></tr>';
+            }
+            
+            dailyHtml += '</table></div>';
+            
+            // Xóa nội dung cũ và chèn nội dung mới
+            const statsContainer = document.getElementById('statsContent');
+            const existingDaily = statsContainer.querySelector('.daily-container');
+            if (existingDaily) existingDaily.remove();
+            
+            const div = document.createElement('div');
+            div.className = 'daily-container';
+            div.innerHTML = dailyHtml;
+            statsContainer.appendChild(div);
+            
             content.style.display = 'block';
         } else {
-            alert('Mã bí mật không đúng!');
+            alert('Mật khẩu chưa chính xác!');
         }
     } catch (e) {
         alert('Lỗi kết nối server!');
