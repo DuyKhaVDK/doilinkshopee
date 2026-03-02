@@ -153,7 +153,6 @@ router.post('/convert-text', async (req, res) => {
 
     const successCount = conversions.filter(c => c.short).length;
 
-    // CẬP NHẬT FIREBASE (TỔNG + THEO NGÀY)
     if (successCount > 0) {
         try {
             const today = new Date().toISOString().split('T')[0];
@@ -179,7 +178,6 @@ router.post('/convert-text', async (req, res) => {
     res.json({ success: true, newText, converted: successCount, details: conversions });
 });
 
-// --- ROUTER ADMIN: XEM BÁO CÁO ---
 router.get('/admin/stats', async (req, res) => {
     const token = req.headers['x-admin-token'];
     if (!token || token !== ADMIN_SECRET) {
