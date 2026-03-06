@@ -1,4 +1,4 @@
-// netlify/functions/api.js
+
 require('dotenv').config();
 const express = require('express');
 const serverless = require('serverless-http');
@@ -17,8 +17,8 @@ const APP_ID = process.env.APP_ID;
 const APP_SECRET = process.env.APP_SECRET;
 const ADMIN_SECRET = process.env.ADMIN_SECRET; 
 const AFF_ID_22 = process.env.AFF_ID || "17396720247"; 
+const AFF_ID_25_750 = "17318770053"; 
 const SHOPEE_API_URL = 'https://open-api.affiliate.shopee.vn/graphql';
-
 
 async function resolveAndProcessUrl(inputUrl) {
     let finalUrl = inputUrl;
@@ -32,21 +32,17 @@ async function resolveAndProcessUrl(inputUrl) {
             finalUrl = response.request?.res?.responseUrl || response.headers['location'] || inputUrl;
         } catch (e) { console.log(`>> Lỗi giải mã: ${inputUrl}`); }
     }
-
     const dashIMatch = finalUrl.match(/-i\.(\d+)\.(\d+)/);
     const productPathMatch = finalUrl.match(/\/product\/\d+\/(\d+)/);
     const genericIdMatch = finalUrl.match(/(?:itemId=|\/product\/)(\d+)/);
-    
     let itemId = dashIMatch ? dashIMatch[2] : (productPathMatch ? productPathMatch[1] : (genericIdMatch ? genericIdMatch[1] : null));
     if (!itemId) {
         const lastDigitMatch = finalUrl.match(/\/(\d+)(?:\?|$)/);
         itemId = lastDigitMatch ? lastDigitMatch[1] : null;
     }
-
     let cleanedUrl = finalUrl.split('?')[0];
     const match = cleanedUrl.match(/shopee\.vn\/([^\/]+)\/(\d+)\/(\d+)/);
     if (match) cleanedUrl = `https://shopee.vn/product/${match[2]}/${match[3]}`;
-
     return { cleanedUrl, itemId };
 }
 
@@ -84,30 +80,34 @@ function generateUniversalLink22(originalUrl, subIds = []) {
     return `https://s.shopee.vn/an_redir?origin_link=${encodedUrl}&affiliate_id=${AFF_ID_22}&sub_id=${subId}`;
 }
 
+// Hàm mới cho công cụ số 3
+function generateUniversalLink25_750(originalUrl) {
+    const encodedUrl = encodeURIComponent(originalUrl);
+    return `https://s.shopee.vn/an_redir?origin_link=${encodedUrl}&affiliate_id=${AFF_ID_25_750}&sub_id=DK`;
+}
 
 router.post('/convert-text', async (req, res) => {
     const { text, subIds } = req.body;
     const urlRegex = /((?:https?:\/\/)?(?:www\.)?(?:shopee\.vn|vn\.shp\.ee|shp\.ee|s\.shopee\.vn|s\.shope\.ee|shope\.ee)[^\s]*)/gi;
     const foundLinks = text.match(urlRegex) || [];
     const uniqueLinks = [...new Set(foundLinks)];
-
     if (uniqueLinks.length === 0) return res.json({ success: false, converted: 0 });
-
     const conversions = await Promise.all(uniqueLinks.map(async (url) => {
         const { cleanedUrl, itemId } = await resolveAndProcessUrl(url.startsWith('http') ? url : `https://${url}`);
         const [link25, info] = await Promise.all([ getShopeeShortLink25(cleanedUrl, subIds), getShopeeProductInfo(itemId) ]);
         const link22 = generateUniversalLink22(cleanedUrl, subIds);
+        const link25_750 = generateUniversalLink25_750(cleanedUrl); 
         return { 
             productName: info?.productName || "Sản phẩm Shopee", 
             imageUrl: info?.imageUrl || "", 
             short25: link25, 
-            short22: link22 
+            short22: link22,
+            short25_750: link25_750 
         };
     }));
     res.json({ success: true, converted: conversions.length, details: conversions });
 });
 
-// --- ROUTER 2: THEO DÕI CLICK (TÁCH BIỆT 25% VÀ 22% KHI NHẤN COPY) ---
 router.post('/track-click', async (req, res) => {
     const { type } = req.body; 
     if (!type) return res.json({ success: false });
@@ -117,7 +117,7 @@ router.post('/track-click', async (req, res) => {
         const dbRes = await axios.get(`${DB_ROOT}.json`);
         const dbData = dbRes.data || {};
         const stats = dbData.stats || {};
-        const dailyVal = dbData.daily?.[today] || { count_25: 0, count_22: 0 };
+        const dailyVal = dbData.daily?.[today] || { count_25: 0, count_22: 0, "25%750K": 0 }; 
         
         let reset = stats.last_date !== today;
         const updates = {};
@@ -125,15 +125,17 @@ router.post('/track-click', async (req, res) => {
             updates.stats = {
                 total_25: type === '25' ? 1 : 0,
                 total_22: type === '22' ? 1 : 0,
+                "25%750K": type === '25%750K' ? 1 : 0, 
                 last_date: today,
                 last_updated: now.toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })
             };
         } else {
-            const field = `total_${type}`;
+           
+            const field = type === '25%750K' ? "25%750K" : `total_${type}`;
             updates[`stats/${field}`] = (stats[field] || 0) + 1;
             updates[`stats/last_updated`] = now.toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' });
         }
-        const dailyField = `count_${type}`;
+        const dailyField = type === '25%750K' ? "25%750K" : `count_${type}`;
         updates[`daily/${today}/${dailyField}`] = (dailyVal[dailyField] || 0) + 1;
         await axios.patch(`${DB_ROOT}.json`, updates);
         res.json({ success: true });
