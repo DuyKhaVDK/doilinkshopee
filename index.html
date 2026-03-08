@@ -37,7 +37,7 @@
         .product-info { flex: 1; text-align: left; }
         .product-name { font-size: 15px; font-weight: 700; color: #1c1c1e; margin-bottom: 5px; line-height: 1.3; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; }
         
-        .btn-action { border: none; cursor: pointer; transition: 0.2s; text-transform: uppercase; border-radius: 12px; font-weight: 800; }
+        .btn-action { border: none; cursor: pointer; transition: 0.2s; text-transform: uppercase; border-radius: 12px; font-weight: 800; font-family: inherit; }
         .btn-buy { background: #ee4d2d; color: white !important; box-shadow: 0 4px 12px rgba(238, 77, 45, 0.2); }
         .btn-copy-22 { background: #0068ff; color: white !important; box-shadow: 0 4px 12px rgba(0, 104, 255, 0.2); }
         .btn-action.copied { background: #34c759 !important; color: white !important; }
@@ -46,8 +46,27 @@
         .action-row .btn-action { flex: 1; padding: 12px 2px; font-size: clamp(8px, 2.8vw, 11px); white-space: nowrap; overflow: hidden; letter-spacing: -0.2px; }
         .action-row .voucher-img { flex: 2; border-radius: 8px; border: 1px solid #eee; height: auto; max-height: 55px; object-fit: cover; }
 
+        .btn-copy-all { 
+    width: 100%; 
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+    color: white; 
+    padding: 14px; 
+    border-radius: 14px; 
+    font-size: 14px; 
+    font-weight: 800; 
+    border: none; 
+    cursor: pointer; 
+    margin-top: 15px; 
+    margin-bottom: 5px;
+    transition: 0.3s; 
+    font-family: inherit; 
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: 0 6px 20px rgba(118, 75, 162, 0.3); 
+}
+        .btn-copy-all.copied { background: #34c759; }
+
         .contact-section { width: 100%; max-width: 500px; margin-top: 30px; text-align: center; }
-        .contact-section h3 { color: #1c1c1e; font-size: 18px; font-weight: 700; margin-bottom: 15px; }
         .btn-zalo { display: block; width: 100%; background: #0068ff; color: white !important; text-decoration: none; padding: 16px; border-radius: 16px; font-size: 15px; font-weight: 700; margin-bottom: 12px; box-shadow: 0 4px 12px rgba(0, 104, 255, 0.15); }
         .btn-zalo.btn-help { background: #ffffff; color: #0068ff !important; border: 1.5px solid #0068ff; }
         
@@ -107,10 +126,22 @@
         function clearInput() { document.getElementById('inputText').value = ''; document.getElementById('productList').innerHTML = ''; }
 
         async function copyToClipboard(url, btn, type) {
+            if(!url || url === 'null') return alert('Lỗi: Link chưa được tạo!');
             navigator.clipboard.writeText(url).then(async () => {
-                const old = btn.innerText; btn.innerText = '✅ XONG'; btn.classList.add('copied');
+                const oldText = btn.innerText; btn.innerText = '✅ ĐÃ XONG'; btn.classList.add('copied');
                 try { await fetch('/api/track-click', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ type: type }) }); } catch(e) {}
-                setTimeout(() => { btn.innerText = old; btn.classList.remove('copied'); }, 2000);
+                setTimeout(() => { btn.innerText = oldText; btn.classList.remove('copied'); }, 2000);
+            });
+        }
+
+        async function copyAllLinks(s25, s22, s25_750, btn) {
+            const content = `1. Mã 25% max 1 triệu: ${s25}\n2. Mã 22% max 750K: ${s22}\n3. Mã 25% max 750K: ${s25_750}`;
+            navigator.clipboard.writeText(content).then(async () => {
+                const oldText = btn.innerText; btn.innerText = '✅ ĐÃ SAO CHÉP TẤT CẢ'; btn.classList.add('copied');
+                try { 
+                    ['25', '22', '25%750K'].forEach(type => fetch('/api/track-click', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ type: type }) })); 
+                } catch(e) {}
+                setTimeout(() => { btn.innerText = oldText; btn.classList.remove('copied'); }, 2000);
             });
         }
 
@@ -136,37 +167,39 @@
                                     <div style="font-size:13px; color:#34c759; font-weight:600;">✅ Sẵn sàng áp mã giảm giá</div>
                                 </div>
                             </div>
-                            <div style="background:#fff5f2; padding:12px; border-radius:12px; border:1px solid #ffebe6; margin-top:10px;">
+
+                            <button class="btn-copy-all" onclick="copyAllLinks('${item.short25}', '${item.short22}', '${item.short25_750}', this)">📋 COPY TẤT CẢ 3 LINK</button>
+                            
+                            <div style="background:#fff5f2; padding:12px; border-radius:12px; border:1px solid #ffebe6; margin-top:5px;">
                                 <b style="color:#ee4d2d; font-size:14px;">1. MÃ GIẢM 25% (Giảm tối đa 1 triệu)</b>
                                 <div class="action-row">
-                                    <button class="btn-action btn-buy" onclick="copyToClipboard('${item.short25}', this, '25')">🔗COPY LINK</button>
+                                    <button class="btn-action btn-buy" onclick="copyToClipboard('${item.short25}', this, '25')">🔗 COPY LINK</button>
                                     <img src="251tr.jpg" class="voucher-img">
                                 </div>
                                 <div style="margin-top: 12px; padding: 12px; background: #fff9f0; border-radius: 12px; border: 1px dashed #ffab91; font-size: 13px; color: #444; line-height: 1.6;">
-                                    💡 Bạn hãy nhấn <b style="color: #ee4d2d; cursor: pointer; text-decoration: none;" onclick="copyToClipboard('${item.short25}', this, '25')">"🔗Copy link"</b> và dán vào dưới bình luận post này để áp mã 25% nhé: 
-                                    <a href="https://www.facebook.com/share/p/1bC4JVvoit/" target="_blank" style="color: #007bff; text-decoration: none; word-break: break-all; margin: 4px 0;"> facebook.com/share/p/1bC4JVvoit/</a>
+                                    💡 Bạn hãy nhấn <b style="color: #ee4d2d; cursor: pointer; text-decoration: none;" onclick="copyToClipboard('${item.short25}', this, '25')">"🔗Copy link"</b> và dán vào dưới bình luận post này để áp mã 25% nhé: <a href="https://www.facebook.com/share/p/1bC4JVvoit/" target="_blank" style="color: #007bff;">facebook.com/share/p/1bC4JVvoit/</a>
                                 </div>
                             </div>
+
                             <div style="background:#f0f7ff; padding:12px; border-radius:12px; border:1px solid #e0efff; margin-top:10px;">
                                 <b style="color:#0068ff; font-size:14px;">2. MÃ GIẢM 22% (Giảm tối đa 750K)</b>
                                 <div class="action-row">
-                                    <button class="btn-action btn-copy-22" onclick="copyToClipboard('${item.short22}', this, '22')">🔗COPY LINK</button>
+                                    <button class="btn-action btn-copy-22" onclick="copyToClipboard('${item.short22}', this, '22')">🔗 COPY LINK</button>
                                     <img src="22750k.jpg" class="voucher-img">
                                 </div>
                                 <div style="margin-top: 12px; padding: 12px; background: #fff9f0; border-radius: 12px; border: 1px dashed #ffab91; font-size: 13px; color: #444; line-height: 1.6;">
-                                    💡 Bạn hãy nhấn <b style="color: #ee4d2d; cursor: pointer; text-decoration: none;" onclick="copyToClipboard('${item.short22}', this, '22')">"🔗Copy link"</b> và dán vào dưới bình luận post này để áp mã 22% nhé: 
-                                    <a href="https://www.facebook.com/share/p/1AsQT2VZNJ/" target="_blank" style="color: #007bff; text-decoration: none; word-break: break-all; margin: 4px 0;"> facebook.com/share/p/1AsQT2VZNJ/</a>
+                                    💡 Nhấn <b style="color: #ee4d2d; cursor: pointer; text-decoration: none;" onclick="copyToClipboard('${item.short22}', this)">"🔗Copy link"</b> và dán vào dưới bình luận post này để áp mã 22% nhé: <a href="https://www.facebook.com/share/p/14UshuKUv63/" target="_blank" style="color: #007bff;">facebook.com/share/p/14UshuKUv63/</a>
                                 </div>
                             </div>
+
                             <div style="background:#fff5f2; padding:12px; border-radius:12px; border:1px solid #ffebe6; margin-top:10px;">
-                                <b style="color:#ee4d2d; font-size:14px;">3. MÃ GIẢM 25% (Giảm tối đa 750K) - Mới✨</b>
+                                <b style="color:#ee4d2d; font-size:14px;">3. MÃ GIẢM 25% (Giảm tối đa 750K)</b>
                                 <div class="action-row">
-                                    <button class="btn-action btn-buy" onclick="copyToClipboard('${item.short25_750}', this, '25%750K')">🔗COPY LINK</button>
+                                    <button class="btn-action btn-buy" onclick="copyToClipboard('${item.short25_750}', this, '25%750K')">🔗 COPY LINK</button>
                                     <img src="25750k.jpg" class="voucher-img">
                                 </div>
                                 <div style="margin-top: 12px; padding: 12px; background: #fff9f0; border-radius: 12px; border: 1px dashed #ffab91; font-size: 13px; color: #444; line-height: 1.6;">
-                                    💡 Bạn hãy nhấn <b style="color: #ee4d2d; cursor: pointer; text-decoration: none;" onclick="copyToClipboard('${item.short25_750}', this, '25%750K')">"🔗Copy link"</b> và dán vào dưới bình luận post này để áp mã 25% nhé: 
-                                    <a href="https://www.facebook.com/share/p/186qPi7dLJ/" target="_blank" style="color: #007bff; text-decoration: none; word-break: break-all; margin: 4px 0;"> facebook.com/share/p/186qPi7dLJ/</a>
+                                    💡 Nhấn <b style="color: #ee4d2d; cursor: pointer; text-decoration: none;" onclick="copyToClipboard('${item.short25_750}', this, '25%750K')">"🔗Copy link"</b> và dán vào dưới bình luận post này để áp mã 25% nhé: <a href="https://www.facebook.com/share/p/186qPi7dLJ/" target="_blank" style="color: #007bff;">facebook.com/share/p/186qPi7dLJ/</a>
                                 </div>
                             </div>`;
                         list.appendChild(div);
@@ -189,17 +222,17 @@
                     const s = data.data.stats || {};
                     document.getElementById('totalConverted').innerHTML = `Hôm nay: <b style="color:#ee4d2d">25%: ${s.total_25 || 0}</b> | <b style="color:#0068ff">22%: ${s.total_22 || 0}</b> | <b style="color:#ee4d2d">25% 750K: ${s["25%750K"] || 0}</b>`;
                     document.getElementById('lastUpdate').innerText = `Cập nhật: ${s.last_updated || "-"}`;
-                    let dailyH = '<div class="daily-container" style="margin-top:15px; border-top:1px solid #eee; padding-top:15px; text-align:left;"><b style="font-size:14px;">📅 Lịch sử 7 ngày:</b><table class="stats-table">';
+                    let dailyH = '<div class="daily-container" style="margin-top:15px; border-top:1px solid #eee; padding-top:15px; text-align:left;"><b style="font-size:14px;">📅 Lịch sử 7 ngày:</b><table style="width:100%; border-collapse:collapse; margin-top:10px;">';
                     if(data.data.daily) {
                         Object.keys(data.data.daily).sort().reverse().slice(0,7).forEach(d => {
                             const v = data.data.daily[d];
-                            dailyH += `<tr><td>${d}</td><td class="stats-value" style="font-size:11px;">25%: ${v.count_25 || 0} | 22%: ${v.count_22 || 0} | 25% 750K: ${v["25%750K"] || 0}</td></tr>`;
+                            dailyH += `<tr style="border-bottom:1px solid #eee;"><td style="padding:8px 0;">${d}</td><td style="text-align:right; font-size:11px;">25%: ${v.count_25 || 0} | 22%: ${v.count_22 || 0} | 750K: ${v["25%750K"] || 0}</td></tr>`;
                         });
                     }
                     dailyH += '</table></div>';
                     document.getElementById('dailyHistory').innerHTML = dailyH;
                     document.getElementById('statsContent').style.display = 'block';
-                } else alert('Mật khẩu chưa chính xác!');
+                } else alert('Mã bí mật chưa chính xác!');
             } catch(e) { alert('Lỗi kết nối server!'); }
         }
     </script>
