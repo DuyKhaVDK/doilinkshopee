@@ -1,4 +1,3 @@
-
 require('dotenv').config();
 const express = require('express');
 const serverless = require('serverless-http');
@@ -80,11 +79,27 @@ function generateUniversalLink22(originalUrl, subIds = []) {
     return `https://s.shopee.vn/an_redir?origin_link=${encodedUrl}&affiliate_id=${AFF_ID_22}&sub_id=${subId}`;
 }
 
-// Hàm mới cho công cụ số 3
 function generateUniversalLink25_750(originalUrl) {
     const encodedUrl = encodeURIComponent(originalUrl);
     return `https://s.shopee.vn/an_redir?origin_link=${encodedUrl}&affiliate_id=${AFF_ID_25_750}&sub_id=DK`;
 }
+
+// --- MỚI: ROUTER CẤU HÌNH TRẠNG THÁI (MÀU VÀ CHỮ) ---
+router.get('/config', async (req, res) => {
+    try {
+        const response = await axios.get(`${DB_ROOT}/config.json`);
+        res.json({ success: true, config: response.data || {} });
+    } catch (e) { res.json({ success: true, config: {} }); }
+});
+
+router.post('/admin/config', async (req, res) => {
+    const token = req.headers['x-admin-token'];
+    if (token !== ADMIN_SECRET) return res.status(403).json({ success: false });
+    try {
+        await axios.put(`${DB_ROOT}/config.json`, req.body);
+        res.json({ success: true });
+    } catch (e) { res.status(500).json({ success: false }); }
+});
 
 router.post('/convert-text', async (req, res) => {
     const { text, subIds } = req.body;
@@ -118,19 +133,11 @@ router.post('/track-click', async (req, res) => {
         const dbData = dbRes.data || {};
         const stats = dbData.stats || {};
         const dailyVal = dbData.daily?.[today] || { count_25: 0, count_22: 0, "25%750K": 0 }; 
-        
         let reset = stats.last_date !== today;
         const updates = {};
         if (reset) {
-            updates.stats = {
-                total_25: type === '25' ? 1 : 0,
-                total_22: type === '22' ? 1 : 0,
-                "25%750K": type === '25%750K' ? 1 : 0, 
-                last_date: today,
-                last_updated: now.toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })
-            };
+            updates.stats = { total_25: type === '25' ? 1 : 0, total_22: type === '22' ? 1 : 0, "25%750K": type === '25%750K' ? 1 : 0, last_date: today, last_updated: now.toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' }) };
         } else {
-           
             const field = type === '25%750K' ? "25%750K" : `total_${type}`;
             updates[`stats/${field}`] = (stats[field] || 0) + 1;
             updates[`stats/last_updated`] = now.toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' });
