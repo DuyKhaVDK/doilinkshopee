@@ -190,7 +190,7 @@
                                 <img src="${item.imageUrl || 'logo.png'}" class="product-img">
                                 <div class="product-info"><div class="product-name">${item.productName}</div><div style="font-size:13px; color:#34c759; font-weight:600;">✅ Sẵn sàng áp mã giảm giá</div></div>
                             </div>
-                            <button class="btn-copy-all" onclick="copyAllLinks('${item.short25}', '${item.short22}', '${item.short25_750}', this)">📋 COPY TẤT CẢ 3 LINK</button>
+            
                             
                             <div style="background:#fff5f2; padding:12px; border-radius:12px; border:1px solid #ffebe6; margin-top:5px;">
                                 <b style="color:#ee4d2d; font-size:14px;">1. MÃ GIẢM 25% (tối đa 1 triệu)<span style="color:${currentConfig.status_color_1}">${currentConfig.status_text_1 || ""}</span></b>
@@ -218,6 +218,7 @@
                                     <a href="https://www.facebook.com/share/p/186qPi7dLJ/" target="_blank" style="color: #007bff; text-decoration: none;">facebook.com/share/p/186qPi7dLJ/</a>
                                 </div>
                             </div>`;
+                        <button class="btn-copy-all" onclick="copyAllLinks('${item.short25}', '${item.short22}', '${item.short25_750}', this)">📋 COPY TẤT CẢ 3 LINK</button>
                         list.appendChild(div);
                     });
                 }
