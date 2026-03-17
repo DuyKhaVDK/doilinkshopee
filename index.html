@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Đổi link Shopee - HÔM NAY CÓ SALE KHÔNG?</title>
-    <link rel="icon" type="image/jpeg" href="logo.png">
-    <link rel="apple-touch-icon" href="logo.png">
+    <link rel="icon" type="image/jpeg" href="logo.jpg">
+    <link rel="apple-touch-icon" href="logo.jpg">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <style>
@@ -91,7 +91,7 @@
 <body>
     <div class="container">
         <div class="header-container">
-            <img src="logo.png" alt="Logo" class="logo-main" id="logoAdmin">
+            <img src="logo.jpg" alt="Logo" class="logo-main" id="logoAdmin">
             <div style="display: flex; flex-direction: column;"><h2>ĐỔI LINK SHOPEE<br>ÁP MÃ 25%</h2></div>
         </div>
         <div class="input-box">
@@ -187,39 +187,18 @@
                         div.className = 'notif-card';
                         div.innerHTML = `
                             <div class="result-header">
-                                <img src="${item.imageUrl || 'logo.png'}" class="product-img">
+                                <img src="${item.imageUrl || 'logo.jpg'}" class="product-img">
                                 <div class="product-info"><div class="product-name">${item.productName}</div><div style="font-size:13px; color:#34c759; font-weight:600;">✅ Sẵn sàng áp mã giảm giá</div></div>
                             </div>
-            
                             
                             <div style="background:#fff5f2; padding:12px; border-radius:12px; border:1px solid #ffebe6; margin-top:5px;">
-                                <b style="color:#ee4d2d; font-size:14px;">1. MÃ GIẢM 25% (tối đa 1 triệu)<span style="color:${currentConfig.status_color_1}">${currentConfig.status_text_1 || ""}</span></b>
-                                <div class="action-row"><button class="btn-action btn-buy" onclick="copyToClipboard('${item.short25}', this, '25')">🔗COPY LINK</button><img src="251tr.jpg" class="voucher-img"></div>
+                                <b style="color:#ee4d2d; font-size:14px;">MÃ GIẢM 22% (Giảm tối đa 300K)<span style="color:${currentConfig.status_color_1}">${currentConfig.status_text_1 || ""}</span></b>
+                                <div class="action-row"><button class="btn-action btn-buy" onclick="copyToClipboard('${item.short25}', this, '25')">🔗COPY LINK</button><img src="22300k.jpg" class="voucher-img"></div>
                                 <div style="margin-top: 12px; padding: 12px; background: #fff9f0; border-radius: 12px; border: 1px dashed #ffab91; font-size: 13px; color: #444; line-height: 1.6;">
                                     💡 Bạn hãy nhấn <b style="color: #ee4d2d; cursor: pointer; text-decoration: none;" onclick="copyToClipboard('${item.short25}', this, '25')">"🔗Copy link"</b> và dán vào dưới bình luận post này để áp mã 25% nhé: 
-                                    <a href="https://www.facebook.com/share/p/1bC4JVvoit/" target="_blank" style="color: #007bff; text-decoration: none;">facebook.com/share/p/1bC4JVvoit/</a>
+                                    <a href="https://www.facebook.com/share/p/19jEofLkpS/" target="_blank" style="color: #007bff; text-decoration: none;">facebook.com/share/p/19jEofLkpS/</a>
                                 </div>
-                            </div>
-
-                            <div style="background:#f0f7ff; padding:12px; border-radius:12px; border:1px solid #e0efff; margin-top:10px;">
-                                <b style="color:#0068ff; font-size:14px;">2. MÃ GIẢM 22% (tối đa 750K)<span style="color:${currentConfig.status_color_2}">${currentConfig.status_text_2 || ""}</span></b>
-                                <div class="action-row"><button class="btn-action btn-copy-22" onclick="copyToClipboard('${item.short22}', this, '22')">🔗COPY LINK</button><img src="22750k.jpg" class="voucher-img"></div>
-                                <div style="margin-top: 12px; padding: 12px; background: #fff9f0; border-radius: 12px; border: 1px dashed #ffab91; font-size: 13px; color: #444; line-height: 1.6;">
-                                    💡 Bạn hãy nhấn <b style="color: #ee4d2d; cursor: pointer; text-decoration: none;" onclick="copyToClipboard('${item.short22}', this, '22')">"🔗Copy link"</b> và dán vào dưới bình luận post này để áp mã 22% nhé: 
-                                    <a href="https://www.facebook.com/share/p/1AsQT2VZNJ/" target="_blank" style="color: #007bff; text-decoration: none;">facebook.com/share/p/1AsQT2VZNJ/</a>
-                                </div>
-                            </div>
-
-                            <div style="background:#fff5f2; padding:12px; border-radius:12px; border:1px solid #ffebe6; margin-top:10px;">
-                                <b style="color:#ee4d2d; font-size:14px;">3. MÃ GIẢM 25% (tối đa 750K)<span style="color:${currentConfig.status_color_3}">${currentConfig.status_text_3 || ""}</span></b>
-                                <div class="action-row"><button class="btn-action btn-buy" onclick="copyToClipboard('${item.short25_750}', this, '25%750K')">🔗COPY LINK</button><img src="25750k.jpg" class="voucher-img"></div>
-                                <div style="margin-top: 12px; padding: 12px; background: #fff9f0; border-radius: 12px; border: 1px dashed #ffab91; font-size: 13px; color: #444; line-height: 1.6;">
-                                    💡 Bạn hãy nhấn <b style="color: #ee4d2d; cursor: pointer; text-decoration: none;" onclick="copyToClipboard('${item.short25_750}', this, '25%750K')">"🔗Copy link"</b> và dán vào dưới bình luận post này để áp mã 25% nhé: 
-                                    <a href="https://www.facebook.com/share/p/186qPi7dLJ/" target="_blank" style="color: #007bff; text-decoration: none;">facebook.com/share/p/186qPi7dLJ/</a>
-                                </div>
-                                <button class="btn-copy-all" onclick="copyAllLinks('${item.short25}', '${item.short22}', '${item.short25_750}', this)">📋 COPY TẤT CẢ 3 LINK</button>
                             </div>`;
-                        
                         list.appendChild(div);
                     });
                 }
