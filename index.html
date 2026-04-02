@@ -1,262 +1,278 @@
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Đổi link Shopee - HÔM NAY CÓ SALE KHÔNG?</title>
-    <link rel="icon" type="image/jpeg" href="logo.png">
-    <link rel="apple-touch-icon" href="logo.png">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <style>
-        * { box-sizing: border-box; }
-        body { 
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
-            background: #f2f2f7; margin: 0; padding: 20px; 
-            display: flex; flex-direction: column; align-items: center; min-height: 100vh;
-        }
-        .container { width: 100%; max-width: 500px; }
-        .header-container { display: flex; align-items: center; justify-content: center; gap: 15px; margin-bottom: 25px; width: 100%; }
-        .logo-main { width: 60px; height: 60px; border-radius: 14px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); object-fit: cover; cursor: pointer; }
-        .header-container h2 { color: #ee4d2d; margin: 0; font-size: 22px; font-weight: 800; text-align: left; line-height: 1.1; }
+    <!DOCTYPE html>
+    <html lang="vi">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+        <title>Đổi link Shopee - HÔM NAY CÓ SALE KHÔNG?</title>
+        <link rel="icon" type="image/jpeg" href="logo.png">
+        <link rel="apple-touch-icon" href="logo.png">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style" content="default">
+        <style>
+            * { box-sizing: border-box; }
+            body { 
+                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+                background: #f2f2f7; margin: 0; padding: 20px; 
+                display: flex; flex-direction: column; align-items: center; min-height: 100vh;
+            }
+            .container { width: 100%; max-width: 500px; }
+            .header-container { display: flex; align-items: center; justify-content: center; gap: 15px; margin-bottom: 25px; width: 100%; }
+            .logo-main { width: 60px; height: 60px; border-radius: 14px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); object-fit: cover; cursor: pointer; }
+            .header-container h2 { color: #ee4d2d; margin: 0; font-size: 22px; font-weight: 800; text-align: left; line-height: 1.1; }
 
-        .input-box { background: white; border-radius: 24px; padding: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.04); }
-        .input-actions { display: flex; justify-content: flex-end; gap: 10px; margin-bottom: 12px; }
-        .btn-small { border: none; padding: 8px 16px; border-radius: 10px; font-size: 13px; font-weight: 600; cursor: pointer; transition: 0.2s; }
-        .btn-paste { background: #e3f2fd; color: #1976d2; }
-        .btn-clear { background: #f5f5f7; color: #8e8e93; }
+            .input-box { background: white; border-radius: 24px; padding: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.04); }
+            .input-actions { display: flex; justify-content: flex-end; gap: 10px; margin-bottom: 12px; }
+            .btn-small { border: none; padding: 8px 16px; border-radius: 10px; font-size: 13px; font-weight: 600; cursor: pointer; transition: 0.2s; }
+            .btn-paste { background: #e3f2fd; color: #1976d2; }
+            .btn-clear { background: #f5f5f7; color: #8e8e93; }
 
-        textarea { width: 100%; height: 110px; border: 1px solid #efeff4; border-radius: 16px; padding: 15px; font-size: 16px; outline: none; resize: none; background: #fafafa; font-family: inherit; transition: border 0.3s; }
-        textarea:focus { border-color: #ee4d2d; background: #fff; }
-        
-        .primary-btn { 
-            width: 100%; background: #ee4d2d; color: white; border: none; padding: 18px; border-radius: 50px; 
-            font-size: 18px; font-weight: bold; cursor: pointer; margin-top: 20px; 
-            box-shadow: 0 8px 20px rgba(238, 77, 45, 0.25); transition: all 0.3s; 
-            display: flex; align-items: center; justify-content: center; gap: 10px; 
-        }
-        .primary-btn:disabled { opacity: 0.7; cursor: not-allowed; }
-
-        .spinner {
-            width: 20px; height: 20px; border: 3px solid rgba(255,255,255,0.3);
-            border-radius: 50%; border-top-color: #fff;
-            animation: spin 0.8s linear infinite; display: none;
-        }
-        @keyframes spin { to { transform: rotate(360deg); } }
-
-        #productList { width: 100%; max-width: 500px; margin-top: 25px; display: flex; flex-direction: column; gap: 15px; }
-        .notif-card { background: #ffffff; border-radius: 20px; padding: 20px; border-top: 5px solid #ee4d2d; box-shadow: 0 10px 30px rgba(0,0,0,0.06); animation: popIn 0.4s ease-out; }
-        .result-header { display: flex; gap: 15px; align-items: center; } 
-        .product-img { width: 110px; height: 110px; border-radius: 12px; object-fit: cover; border: 1px solid #eee; background: #f9f9f9; flex-shrink: 0; }
-        .product-info { flex: 1; text-align: left; }
-        .product-name { font-size: 15px; font-weight: 700; color: #1c1c1e; margin-bottom: 5px; line-height: 1.3; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; }
-        
-        .btn-action { border: none; cursor: pointer; transition: 0.2s; text-transform: uppercase; border-radius: 12px; font-weight: 800; font-family: inherit; }
-        .btn-buy { background: #ee4d2d; color: white !important; box-shadow: 0 4px 12px rgba(238, 77, 45, 0.2); }
-        .btn-copy-22 { background: #0068ff; color: white !important; box-shadow: 0 4px 12px rgba(0, 104, 255, 0.2); }
-        .btn-action.copied { background: #34c759 !important; color: white !important; }
-
-        .action-row { display: flex; align-items: center; gap: 10px; margin-top: 10px; width: 100%; }
-        .action-row .btn-action { flex: 1; padding: 12px 2px; font-size: clamp(8px, 2.8vw, 11px); white-space: nowrap; overflow: hidden; letter-spacing: -0.2px; }
-        .action-row .voucher-img { flex: 2; border-radius: 8px; border: 1px solid #eee; height: auto; max-height: 55px; object-fit: cover; }
-
-        .btn-copy-all { 
-            width: 100%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; 
-            padding: 14px; border-radius: 14px; font-size: 14px; font-weight: 800; border: none; 
-            cursor: pointer; margin-top: 15px; margin-bottom: 5px; transition: 0.3s; 
-            font-family: inherit; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: 0 6px 20px rgba(118, 75, 162, 0.3); 
-        }
-        .btn-copy-all.copied { background: #34c759; }
-
-        .config-box { margin-top: 20px; border-top: 2px solid #eee; padding-top: 15px; text-align: left; }
-        .config-row-flex { display: flex; gap: 10px; align-items: center; margin-bottom: 10px; }
-        .config-input { flex: 4; padding: 10px; border-radius: 10px; border: 1px solid #ddd; font-size: 13px; font-family: inherit; }
-        .config-color { flex: 1; height: 38px; border-radius: 10px; border: 1px solid #ddd; cursor: pointer; padding: 2px; }
-
-        .contact-section { width: 100%; max-width: 500px; margin-top: 30px; text-align: center; }
-        .btn-zalo { display: block; width: 100%; background: #0068ff; color: white !important; text-decoration: none; padding: 16px; border-radius: 16px; font-size: 15px; font-weight: 700; margin-bottom: 12px; box-shadow: 0 4px 12px rgba(0, 104, 255, 0.15); }
-        .btn-zalo.btn-help { background: #ffffff; color: #0068ff !important; border: 1.5px solid #0068ff; }
-        
-        footer { margin-top: auto; padding: 40px 20px; text-align: center; width: 100%; max-width: 500px; }
-        .copyright { font-size: 13px; color: #a1a1a6; line-height: 1.6; }
-        .footer-divider { height: 1px; background: linear-gradient(to right, transparent, #d1d1d6, transparent); margin-bottom: 20px; }
-
-        #adminSection { display: none; width: 100%; max-width: 500px; margin-top: 30px; padding: 20px; background: #fff; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); text-align: center; }
-        .stats-table { width: 100%; margin-top: 15px; border-collapse: collapse; font-size: 14px; }
-        .stats-table td { padding: 10px; border-bottom: 1px solid #eee; text-align: left; }
-        .stats-value { font-weight: 800; color: #ee4d2d; text-align: right; }
-        @keyframes popIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="header-container">
-            <img src="logo.png" alt="Logo" class="logo-main" id="logoAdmin">
-            <div style="display: flex; flex-direction: column;"><h2>ĐỔI LINK SHOPEE<br>ÁP MÃ 22% & 50%</h2></div>
-        </div>
-        <div class="input-box">
-            <div class="input-actions">
-                <button class="btn-small btn-paste" onclick="pasteFromClipboard()">📋 Dán link</button>
-                <button class="btn-small btn-clear" onclick="clearInput()">✕ Xóa</button>
-            </div>
-            <textarea id="inputText" placeholder="Dán link Shopee vào đây..."></textarea>
-            <button class="primary-btn" onclick="processText()" id="btnConvert">
-                <span class="spinner" id="loadingSpinner"></span>
-                <span id="btnText">CHUYỂN ĐỔI NGAY</span>
-            </button>
-        </div>
-    </div>
-    
-    <div id="productList"></div>
-
-    <div class="contact-section">
-        <h3>Liên hệ & Trợ giúp</h3>
-        <a href="https://zalo.me/g/hngoox923" target="_blank" class="btn-zalo">💬 Nhóm Zalo thông báo mã giảm giá</a>
-        <a href="https://zalo.me/84333827185" target="_blank" class="btn-zalo btn-help">🆘 Trợ giúp</a>
-    </div>
-
-    <div id="adminSection">
-        <h3>📊 Thống kê & Quản trị</h3>
-        <input type="password" id="adminSecretInput" style="width:100%; padding:12px; margin-bottom:10px; border-radius:10px; border:1px solid #ddd; text-align:center;" placeholder="Nhập mã bí mật...">
-        <button class="primary-btn" style="margin-top:0; padding:12px;" onclick="fetchAdminStats()">XEM BÁO CÁO & DỮ LIỆU</button>
-        <div id="statsContent" style="display:none; text-align:left; margin-top:15px;">
-            <p id="totalConverted"></p><p id="lastUpdate"></p><div id="dailyHistory"></div>
-            <div class="config-box">
-                <b style="color:#ee4d2d;">⚙️ Cập nhật trạng thái mã & Màu sắc</b>
-                <div class="config-row-flex" style="margin-top:10px;"><input type="text" id="status1" class="config-input" placeholder="Mã 1..."><input type="color" id="color1" class="config-color" value="#ee4d2d"></div>
-                <div class="config-row-flex"><input type="text" id="status2" class="config-input" placeholder="Mã 2..."><input type="color" id="color2" class="config-color" value="#ee4d2d"></div>
-                <div class="config-row-flex"><input type="text" id="status3" class="config-input" placeholder="Mã 3..."><input type="color" id="color3" class="config-color" value="#ee4d2d"></div>
-                <button class="primary-btn" style="background:#007aff; margin-top:5px; padding:12px;" onclick="saveAdminConfig()">LƯU CẤU HÌNH TRẠNG THÁI</button>
-            </div>
-        </div>
-    </div>
-
-    <footer>
-        <div class="footer-divider"></div>
-        <div class="copyright">© 2026 <a href="https://www.facebook.com/groups/homnaycosalekhong" style="text-decoration: none; color:#ed4d2d;"><b>NHÓM: HÔM NAY CÓ SALE KHÔNG?</b></a></div>
-    </footer>
-
-    <script>
-        let currentConfig = { status_text_1: "", status_color_1: "#ee4d2d", status_text_2: "", status_color_2: "#ee4d2d", status_text_3: "", status_color_3: "#ee4d2d" };
-
-        window.onload = async () => {
-            try {
-                const res = await fetch('/api/config');
-                const data = await res.json();
-                if (data.success && data.config) { currentConfig = { ...currentConfig, ...data.config }; }
-            } catch (e) {}
-        };
-
-        async function pasteFromClipboard() { try { const t = await navigator.clipboard.readText(); if(t) document.getElementById('inputText').value = t; } catch(e) {} }
-        function clearInput() { document.getElementById('inputText').value = ''; document.getElementById('productList').innerHTML = ''; }
-
-        async function copyToClipboard(url, btn, type) {
-            if(!url || url === 'null') return alert('Lỗi: Link chưa được tạo!');
-            navigator.clipboard.writeText(url).then(async () => {
-                const oldText = btn.innerText; btn.innerText = '✅ ĐÃ XONG'; btn.classList.add('copied');
-                try { await fetch('/api/track-click', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ type: type }) }); } catch(e) {}
-                setTimeout(() => { btn.innerText = oldText; btn.classList.remove('copied'); }, 2000);
-            });
-        }
-
-        async function copyAllLinks(s25, s22, s25_750, btn) {
-            const content = `1. Mã 25% max 1 triệu: ${s25}\n2. Mã 22% max 750K: ${s22}\n3. Mã 25% max 750K: ${s25_750}`;
-            navigator.clipboard.writeText(content).then(async () => {
-                const oldText = btn.innerText; btn.innerText = '✅ ĐÃ SAO CHÉP TẤT CẢ'; btn.classList.add('copied');
-                try { ['25', '22', '25%750K'].forEach(type => fetch('/api/track-click', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ type: type }) })); } catch(e) {}
-                setTimeout(() => { btn.innerText = oldText; btn.classList.remove('copied'); }, 2000);
-            });
-        }
-
-        async function processText() {
-            const input = document.getElementById('inputText').value;
-            const btn = document.getElementById('btnConvert');
-            const btnText = document.getElementById('btnText');
-            const spinner = document.getElementById('loadingSpinner');
-            const list = document.getElementById('productList');
-            if (!input.trim()) return alert('Dán link vào!');
+            textarea { width: 100%; height: 110px; border: 1px solid #efeff4; border-radius: 16px; padding: 15px; font-size: 16px; outline: none; resize: none; background: #fafafa; font-family: inherit; transition: border 0.3s; }
+            textarea:focus { border-color: #ee4d2d; background: #fff; }
             
-            btn.disabled = true; btnText.innerText = 'ĐANG XỬ LÝ...'; spinner.style.display = 'block';
-            list.innerHTML = ''; 
-            try {
-                const res = await fetch('/api/convert-text', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: input, subIds: ["DK"] }) });
-                const data = await res.json();
-                if (data.success) {
-                    data.details.forEach(item => {
-                        const div = document.createElement('div');
-                        div.className = 'notif-card';
-                        div.innerHTML = `
-                            <div class="result-header">
-                                <img src="${item.imageUrl || 'logo.png'}" class="product-img">
-                                <div class="product-info"><div class="product-name">${item.productName}</div><div style="font-size:13px; color:#34c759; font-weight:600;">✅ Sẵn sàng áp mã giảm giá</div></div>
-                            </div>
-                            
-                            <div style="background:#fff5f2; padding:12px; border-radius:12px; border:1px solid #ffebe6; margin-top:5px;">
-                                <b style="color:#ee4d2d; font-size:14px;">MÃ GIẢM 22% (Giảm tối đa 500K)<span style="color:${currentConfig.status_color_1}">${currentConfig.status_text_1 || ""}</span></b>
-                                <div class="action-row"><button class="btn-action btn-buy" onclick="copyToClipboard('${item.short25}', this, '25')">🔗COPY LINK</button><img src="22500k.png" class="voucher-img"></div>
-                                <div style="margin-top: 12px; padding: 12px; background: #fff9f0; border-radius: 12px; border: 1px dashed #ffab91; font-size: 13px; color: #444; line-height: 1.6;">
-                                    💡 Bạn hãy nhấn <b style="color: #ee4d2d; cursor: pointer; text-decoration: none;" onclick="copyToClipboard('${item.short25}', this, '25')">"🔗Copy link"</b> và dán vào dưới bình luận post này để áp mã 22% nhé: 
-                                    <a href="https://www.facebook.com/share/p/1DF4c9a8cT/?mibextid=wwXIfr" target="_blank" style="color: #007bff; text-decoration: none;">facebook.com/share/p/1DF4c9a8cT</a>
-                                    <br><b>💡Mã 50% cũng Copy link chung với mã 22% nhưng cần lưu ý các khung giờ, chi tiết cách áp mã 50% xem tại</b> 
-<a href="https://www.facebook.com/share/p/1GdPsnJAU1/" target="_blank" style="color: #ed4d2d; text-decoration: none;">Tại đây</a>                        
-                                </div>                           
-                            </div>`;          
-                        list.appendChild(div);     
-                    });
-                }
-            } catch (e) { alert('Lỗi hệ thống!'); }
-            finally { btn.disabled = false; btnText.innerText = 'CHUYỂN ĐỔI NGAY'; spinner.style.display = 'none'; }
-        }
+            .primary-btn { 
+                width: 100%; background: #ee4d2d; color: white; border: none; padding: 18px; border-radius: 50px; 
+                font-size: 18px; font-weight: bold; cursor: pointer; margin-top: 20px; 
+                box-shadow: 0 8px 20px rgba(238, 77, 45, 0.25); transition: all 0.3s; 
+                display: flex; align-items: center; justify-content: center; gap: 10px; 
+            }
+            .primary-btn:disabled { opacity: 0.7; cursor: not-allowed; }
 
-        let clicks = 0;
-        document.getElementById('logoAdmin').onclick = () => { if(++clicks === 5) { document.getElementById('adminSection').style.display='block'; clicks=0; } };
+            .spinner {
+                width: 20px; height: 20px; border: 3px solid rgba(255,255,255,0.3);
+                border-radius: 50%; border-top-color: #fff;
+                animation: spin 0.8s linear infinite; display: none;
+            }
+            @keyframes spin { to { transform: rotate(360deg); } }
 
-        async function fetchAdminStats() {
-            const secret = document.getElementById('adminSecretInput').value;
-            if(!secret) return alert('Vui lòng nhập mã!');
-            try {
-                const res = await fetch('/api/admin/stats', { headers: { 'x-admin-token': secret } });
-                const resCfg = await fetch('/api/config');
-                const data = await res.json();
-                const dataCfg = await resCfg.json();
-                if (data.success) {
-                    const s = data.data.stats || {};
-                    document.getElementById('totalConverted').innerHTML = `Hôm nay: <b style="color:#ee4d2d">25%: ${s.total_25 || 0}</b> | <b style="color:#0068ff">22%: ${s.total_22 || 0}</b> | <b style="color:#ee4d2d">25% 750K: ${s["25%750K"] || 0}</b>`;
-                    document.getElementById('lastUpdate').innerText = `Cập nhật: ${s.last_updated || "-"}`;
-                    if(dataCfg.success && dataCfg.config) {
-                        document.getElementById('status1').value = dataCfg.config.status_text_1 || "";
-                        document.getElementById('color1').value = dataCfg.config.status_color_1 || "#ee4d2d";
-                        document.getElementById('status2').value = dataCfg.config.status_text_2 || "";
-                        document.getElementById('color2').value = dataCfg.config.status_color_2 || "#ee4d2d";
-                        document.getElementById('status3').value = dataCfg.config.status_text_3 || "";
-                        document.getElementById('color3').value = dataCfg.config.status_color_3 || "#ee4d2d";
-                    }
-                    let dailyH = '<div class="daily-container" style="margin-top:15px; border-top:1px solid #eee; padding-top:15px; text-align:left;"><b style="font-size:14px;">📅 Lịch sử 7 ngày:</b><table style="width:100%; border-collapse:collapse; margin-top:10px;">';
-                    if(data.data.daily) {
-                        Object.keys(data.data.daily).sort().reverse().slice(0,7).forEach(d => {
-                            const v = data.data.daily[d];
-                            dailyH += `<tr style="border-bottom:1px solid #eee;"><td style="padding:8px 0;">${d}</td><td style="text-align:right; font-size:11px;">25%: ${v.count_25 || 0} | 22%: ${v.count_22 || 0} | 25% 750K: ${v["25%750K"] || 0}</td></tr>`;
+            #productList { width: 100%; max-width: 500px; margin-top: 25px; display: flex; flex-direction: column; gap: 15px; }
+            .notif-card { background: #ffffff; border-radius: 20px; padding: 20px; border-top: 5px solid #ee4d2d; box-shadow: 0 10px 30px rgba(0,0,0,0.06); animation: popIn 0.4s ease-out; }
+            .result-header { display: flex; gap: 15px; align-items: center; } 
+            .product-img { width: 110px; height: 110px; border-radius: 12px; object-fit: cover; border: 1px solid #eee; background: #f9f9f9; flex-shrink: 0; }
+            .product-info { flex: 1; text-align: left; }
+            .product-name { font-size: 15px; font-weight: 700; color: #1c1c1e; margin-bottom: 5px; line-height: 1.3; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; }
+            
+            .btn-action { border: none; cursor: pointer; transition: 0.2s; text-transform: uppercase; border-radius: 12px; font-weight: 800; font-family: inherit; }
+            .btn-buy { background: #ee4d2d; color: white !important; box-shadow: 0 4px 12px rgba(238, 77, 45, 0.2); }
+            .btn-copy-22 { background: #0068ff; color: white !important; box-shadow: 0 4px 12px rgba(0, 104, 255, 0.2); }
+            .btn-action.copied { background: #34c759 !important; color: white !important; }
+
+            .action-row { display: flex; align-items: center; gap: 10px; margin-top: 10px; width: 100%; }
+            .action-row .btn-action { flex: 1; padding: 12px 2px; font-size: clamp(8px, 2.8vw, 11px); white-space: nowrap; overflow: hidden; letter-spacing: -0.2px; }
+            .action-row .voucher-img { flex: 2; border-radius: 8px; border: 1px solid #eee; height: auto; max-height: 55px; object-fit: cover; }
+
+            .btn-copy-all { 
+                width: 100%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; 
+                padding: 14px; border-radius: 14px; font-size: 14px; font-weight: 800; border: none; 
+                cursor: pointer; margin-top: 15px; margin-bottom: 5px; transition: 0.3s; 
+                font-family: inherit; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: 0 6px 20px rgba(118, 75, 162, 0.3); 
+            }
+            .btn-copy-all.copied { background: #34c759; }
+
+            .config-box { margin-top: 20px; border-top: 2px solid #eee; padding-top: 15px; text-align: left; }
+            .config-row-flex { display: flex; gap: 10px; align-items: center; margin-bottom: 10px; }
+            .config-input { flex: 4; padding: 10px; border-radius: 10px; border: 1px solid #ddd; font-size: 13px; font-family: inherit; }
+            .config-color { flex: 1; height: 38px; border-radius: 10px; border: 1px solid #ddd; cursor: pointer; padding: 2px; }
+
+            .contact-section { width: 100%; max-width: 500px; margin-top: 30px; text-align: center; }
+            .btn-zalo { display: block; width: 100%; background: #0068ff; color: white !important; text-decoration: none; padding: 16px; border-radius: 16px; font-size: 15px; font-weight: 700; margin-bottom: 12px; box-shadow: 0 4px 12px rgba(0, 104, 255, 0.15); }
+            .btn-zalo.btn-help { background: #ffffff; color: #0068ff !important; border: 1.5px solid #0068ff; }
+            
+            footer { margin-top: auto; padding: 40px 20px; text-align: center; width: 100%; max-width: 500px; }
+            .copyright { font-size: 13px; color: #a1a1a6; line-height: 1.6; }
+            .footer-divider { height: 1px; background: linear-gradient(to right, transparent, #d1d1d6, transparent); margin-bottom: 20px; }
+
+            #adminSection { display: none; width: 100%; max-width: 500px; margin-top: 30px; padding: 20px; background: #fff; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); text-align: center; }
+            .stats-table { width: 100%; margin-top: 15px; border-collapse: collapse; font-size: 14px; }
+            .stats-table td { padding: 10px; border-bottom: 1px solid #eee; text-align: left; }
+            .stats-value { font-weight: 800; color: #ee4d2d; text-align: right; }
+            @keyframes popIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+            /* STYLE RIÊNG CHO PHẦN HƯỚNG DẪN */
+            .instruction-box { background: white; border-radius: 24px; padding: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.04); margin-top: 30px; width: 100%; max-width: 500px; text-align: left; }
+            .instruction-box h3 { margin-top: 0; color: #ee4d2d; font-size: 18px; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
+            .instruction-step { font-size: 14px; color: #1c1c1e; line-height: 1.6; margin-bottom: 12px; }
+            .instruction-step b { color: #ee4d2d; }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header-container">
+                <img src="logo.png" alt="Logo" class="logo-main" id="logoAdmin">
+                <div style="display: flex; flex-direction: column;"><h2>ĐỔI LINK SHOPEE<br>ÁP MÃ 22% & 50%</h2></div>
+            </div>
+            <div class="input-box">
+                <div class="input-actions">
+                    <button class="btn-small btn-paste" onclick="pasteFromClipboard()">📋 Dán link</button>
+                    <button class="btn-small btn-clear" onclick="clearInput()">✕ Xóa</button>
+                </div>
+                <textarea id="inputText" placeholder="Dán link Shopee vào đây..."></textarea>
+                <button class="primary-btn" onclick="processText()" id="btnConvert">
+                    <span class="spinner" id="loadingSpinner"></span>
+                    <span id="btnText">CHUYỂN ĐỔI NGAY</span>
+                </button>
+            </div>
+        </div>
+        
+        <div id="productList"></div>
+
+        <div class="instruction-box">
+            <h3>📌Hướng dẫn áp mã:</h3>
+            <div class="instruction-step">
+                • <b>Bước 1:</b> Copy link sản phẩm từ Shopee => Dán link sản phẩm vào ô phía trên => Nhấn “Chuyển đổi ngay”
+            </div>
+            <div class="instruction-step">
+                • <b>Bước 2:</b> Nhấn "Copy link" vừa chuyển đổi được rồi bình luận dưới post này <a href="https://www.facebook.com/share/p/1DF4c9a8cT/" target="_blank" style="color: #007bff; text-decoration: none;">https://www.facebook.com/share/p/1DF4c9a8cT/</a> và mua trực tiếp tại link để áp mã nha
+            </div>
+        </div>
+
+        <div class="contact-section">
+            <h3>Liên hệ & Trợ giúp</h3>
+            <a href="https://zalo.me/g/hngoox923" target="_blank" class="btn-zalo">💬 Nhóm Zalo thông báo mã giảm giá</a>
+            <a href="https://zalo.me/84333827185" target="_blank" class="btn-zalo btn-help">🆘 Trợ giúp</a>
+        </div>
+
+        <div id="adminSection">
+            <h3>📊 Thống kê & Quản trị</h3>
+            <input type="password" id="adminSecretInput" style="width:100%; padding:12px; margin-bottom:10px; border-radius:10px; border:1px solid #ddd; text-align:center;" placeholder="Nhập mã bí mật...">
+            <button class="primary-btn" style="margin-top:0; padding:12px;" onclick="fetchAdminStats()">XEM BÁO CÁO & DỮ LIỆU</button>
+            <div id="statsContent" style="display:none; text-align:left; margin-top:15px;">
+                <p id="totalConverted"></p><p id="lastUpdate"></p><div id="dailyHistory"></div>
+                <div class="config-box">
+                    <b style="color:#ee4d2d;">⚙️ Cập nhật trạng thái mã & Màu sắc</b>
+                    <div class="config-row-flex" style="margin-top:10px;"><input type="text" id="status1" class="config-input" placeholder="Mã 1..."><input type="color" id="color1" class="config-color" value="#ee4d2d"></div>
+                    <div class="config-row-flex"><input type="text" id="status2" class="config-input" placeholder="Mã 2..."><input type="color" id="color2" class="config-color" value="#ee4d2d"></div>
+                    <div class="config-row-flex"><input type="text" id="status3" class="config-input" placeholder="Mã 3..."><input type="color" id="color3" class="config-color" value="#ee4d2d"></div>
+                    <button class="primary-btn" style="background:#007aff; margin-top:5px; padding:12px;" onclick="saveAdminConfig()">LƯU CẤU HÌNH TRẠNG THÁI</button>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            <div class="footer-divider"></div>
+            <div class="copyright">© 2026 <a href="https://www.facebook.com/groups/homnaycosalekhong" style="text-decoration: none; color:#ed4d2d;"><b>NHÓM: HÔM NAY CÓ SALE KHÔNG?</b></a></div>
+        </footer>
+
+        <script>
+            let currentConfig = { status_text_1: "", status_color_1: "#ee4d2d", status_text_2: "", status_color_2: "#ee4d2d", status_text_3: "", status_color_3: "#ee4d2d" };
+
+            window.onload = async () => {
+                try {
+                    const res = await fetch('/api/config');
+                    const data = await res.json();
+                    if (data.success && data.config) { currentConfig = { ...currentConfig, ...data.config }; }
+                } catch (e) {}
+            };
+
+            async function pasteFromClipboard() { try { const t = await navigator.clipboard.readText(); if(t) document.getElementById('inputText').value = t; } catch(e) {} }
+            function clearInput() { document.getElementById('inputText').value = ''; document.getElementById('productList').innerHTML = ''; }
+
+            async function copyToClipboard(url, btn, type) {
+                if(!url || url === 'null') return alert('Lỗi: Link chưa được tạo!');
+                navigator.clipboard.writeText(url).then(async () => {
+                    const oldText = btn.innerText; btn.innerText = '✅ ĐÃ XONG'; btn.classList.add('copied');
+                    try { await fetch('/api/track-click', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ type: type }) }); } catch(e) {}
+                    setTimeout(() => { btn.innerText = oldText; btn.classList.remove('copied'); }, 2000);
+                });
+            }
+
+            async function copyAllLinks(s25, s22, s25_750, btn) {
+                const content = `1. Mã 25% max 1 triệu: ${s25}\n2. Mã 22% max 750K: ${s22}\n3. Mã 25% max 750K: ${s25_750}`;
+                navigator.clipboard.writeText(content).then(async () => {
+                    const oldText = btn.innerText; btn.innerText = '✅ ĐÃ SAO CHÉP TẤT CẢ'; btn.classList.add('copied');
+                    try { ['25', '22', '25%750K'].forEach(type => fetch('/api/track-click', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ type: type }) })); } catch(e) {}
+                    setTimeout(() => { btn.innerText = oldText; btn.classList.remove('copied'); }, 2000);
+                });
+            }
+
+            async function processText() {
+                const input = document.getElementById('inputText').value;
+                const btn = document.getElementById('btnConvert');
+                const btnText = document.getElementById('btnText');
+                const spinner = document.getElementById('loadingSpinner');
+                const list = document.getElementById('productList');
+                if (!input.trim()) return alert('Dán link vào!');
+                
+                btn.disabled = true; btnText.innerText = 'ĐANG XỬ LÝ...'; spinner.style.display = 'block';
+                list.innerHTML = ''; 
+                try {
+                    const res = await fetch('/api/convert-text', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: input, subIds: ["DK"] }) });
+                    const data = await res.json();
+                    if (data.success) {
+                        data.details.forEach(item => {
+                            const div = document.createElement('div');
+                            div.className = 'notif-card';
+                            div.innerHTML = `
+                                <div class="result-header">
+                                    <img src="${item.imageUrl || 'logo.png'}" class="product-img">
+                                    <div class="product-info"><div class="product-name">${item.productName}</div><div style="font-size:13px; color:#34c759; font-weight:600;">✅ Sẵn sàng áp mã giảm giá</div></div>
+                                </div>
+                                
+                                <div style="background:#fff5f2; padding:12px; border-radius:12px; border:1px solid #ffebe6; margin-top:5px;">
+                                    <b style="color:#ee4d2d; font-size:14px;">MÃ GIẢM 22% (Giảm tối đa 500K)<span style="color:${currentConfig.status_color_1}">${currentConfig.status_text_1 || ""}</span></b>
+                                    <div class="action-row"><button class="btn-action btn-buy" onclick="copyToClipboard('${item.short25}', this, '25')">🔗COPY LINK</button><img src="22500k.png" class="voucher-img"></div>
+                                    <div style="margin-top: 12px; padding: 12px; background: #fff9f0; border-radius: 12px; border: 1px dashed #ffab91; font-size: 13px; color: #444; line-height: 1.6;">
+                                        💡 Bạn hãy nhấn <b style="color: #ee4d2d; cursor: pointer; text-decoration: none;" onclick="copyToClipboard('${item.short25}', this, '25')">"🔗Copy link"</b> và dán vào dưới bình luận post này để áp mã 22% nhé: 
+                                        <a href="https://www.facebook.com/share/p/1DF4c9a8cT/?mibextid=wwXIfr" target="_blank" style="color: #007bff; text-decoration: none;">facebook.com/share/p/1DF4c9a8cT</a>
+                                        <br><b>💡Mã 50% cũng Copy link chung với mã 22% nhưng cần lưu ý các khung giờ, chi tiết cách áp mã 50% xem tại</b> 
+    <a href="https://www.facebook.com/share/p/1GdPsnJAU1/" target="_blank" style="color: #ed4d2d; text-decoration: none;">Tại đây</a>                        
+                                    </div>                           
+                                </div>`;          
+                            list.appendChild(div);     
                         });
                     }
-                    dailyH += '</table></div>';
-                    document.getElementById('dailyHistory').innerHTML = dailyH;
-                    document.getElementById('statsContent').style.display = 'block';
-                } else alert('Mã bí mật chưa chính xác!');
-            } catch(e) { alert('Lỗi kết nối server!'); }
-        }
+                } catch (e) { alert('Lỗi hệ thống!'); }
+                finally { btn.disabled = false; btnText.innerText = 'CHUYỂN ĐỔI NGAY'; spinner.style.display = 'none'; }
+            }
 
-        async function saveAdminConfig() {
-            const secret = document.getElementById('adminSecretInput').value;
-            const newCfg = {
-                status_text_1: document.getElementById('status1').value, status_color_1: document.getElementById('color1').value,
-                status_text_2: document.getElementById('status2').value, status_color_2: document.getElementById('color2').value,
-                status_text_3: document.getElementById('status3').value, status_color_3: document.getElementById('color3').value
-            };
-            try {
-                const res = await fetch('/api/admin/config', { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-admin-token': secret }, body: JSON.stringify(newCfg) });
-                if ((await res.json()).success) { alert('Đã lưu! Hãy load lại trang.'); currentConfig = newCfg; }
-            } catch(e) { alert('Lỗi khi lưu!'); }
-        }
-    </script>
-</body>
-</html>
+            let clicks = 0;
+            document.getElementById('logoAdmin').onclick = () => { if(++clicks === 5) { document.getElementById('adminSection').style.display='block'; clicks=0; } };
+
+            async function fetchAdminStats() {
+                const secret = document.getElementById('adminSecretInput').value;
+                if(!secret) return alert('Vui lòng nhập mã!');
+                try {
+                    const res = await fetch('/api/admin/stats', { headers: { 'x-admin-token': secret } });
+                    const resCfg = await fetch('/api/config');
+                    const data = await res.json();
+                    const dataCfg = await resCfg.json();
+                    if (data.success) {
+                        const s = data.data.stats || {};
+                        document.getElementById('totalConverted').innerHTML = `Hôm nay: <b style="color:#ee4d2d">25%: ${s.total_25 || 0}</b> | <b style="color:#0068ff">22%: ${s.total_22 || 0}</b> | <b style="color:#ee4d2d">25% 750K: ${s["25%750K"] || 0}</b>`;
+                        document.getElementById('lastUpdate').innerText = `Cập nhật: ${s.last_updated || "-"}`;
+                        if(dataCfg.success && dataCfg.config) {
+                            document.getElementById('status1').value = dataCfg.config.status_text_1 || "";
+                            document.getElementById('color1').value = dataCfg.config.status_color_1 || "#ee4d2d";
+                            document.getElementById('status2').value = dataCfg.config.status_text_2 || "";
+                            document.getElementById('color2').value = dataCfg.config.status_color_2 || "#ee4d2d";
+                            document.getElementById('status3').value = dataCfg.config.status_text_3 || "";
+                            document.getElementById('color3').value = dataCfg.config.status_color_3 || "#ee4d2d";
+                        }
+                        let dailyH = '<div class="daily-container" style="margin-top:15px; border-top:1px solid #eee; padding-top:15px; text-align:left;"><b style="font-size:14px;">📅 Lịch sử 7 ngày:</b><table style="width:100%; border-collapse:collapse; margin-top:10px;">';
+                        if(data.data.daily) {
+                            Object.keys(data.data.daily).sort().reverse().slice(0,7).forEach(d => {
+                                const v = data.data.daily[d];
+                                dailyH += `<tr style="border-bottom:1px solid #eee;"><td style="padding:8px 0;">${d}</td><td style="text-align:right; font-size:11px;">25%: ${v.count_25 || 0} | 22%: ${v.count_22 || 0} | 25% 750K: ${v["25%750K"] || 0}</td></tr>`;
+                            });
+                        }
+                        dailyH += '</table></div>';
+                        document.getElementById('dailyHistory').innerHTML = dailyH;
+                        document.getElementById('statsContent').style.display = 'block';
+                    } else alert('Mã bí mật chưa chính xác!');
+                } catch(e) { alert('Lỗi kết nối server!'); }
+            }
+
+            async function saveAdminConfig() {
+                const secret = document.getElementById('adminSecretInput').value;
+                const newCfg = {
+                    status_text_1: document.getElementById('status1').value, status_color_1: document.getElementById('color1').value,
+                    status_text_2: document.getElementById('status2').value, status_color_2: document.getElementById('color2').value,
+                    status_text_3: document.getElementById('status3').value, status_color_3: document.getElementById('color3').value
+                };
+                try {
+                    const res = await fetch('/api/admin/config', { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-admin-token': secret }, body: JSON.stringify(newCfg) });
+                    if ((await res.json()).success) { alert('Đã lưu! Hãy load lại trang.'); currentConfig = newCfg; }
+                } catch(e) { alert('Lỗi khi lưu!'); }
+            }
+        </script>
+    </body>
+    </html>
